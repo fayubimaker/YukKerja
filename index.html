@@ -570,29 +570,75 @@ tr:hover td{background:var(--s2)}
 
 <script>
 // ═══════════════════════════════════════════
-// KONFIGURASI — paste Web App URL kamu di sini
+// KONFIGURASI SUPABASE
 // ═══════════════════════════════════════════
-const GAS_URL = 'https://script.google.com/macros/s/AKfycbwqitZ_A2JKTwlsrcf9l4R-i97dqbPgaxViR5JnvGZbUqSIbLekUmthavY_j4nE_20/exec';
+const SUPA_URL = 'https://scwlnrshvgmvdhetmiuu.supabase.co';
+const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNjd2xucnNodmdtdmRoZXRtaXV1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzkzMzA4OTksImV4cCI6MjA5NDkwNjg5OX0.RxeIOL6Y2upxdhZNaiNDg5r6mNGRiZE4Vw8gY2yncBk';
 
 // ═══════════════════════════════════════════
-// API LAYER — semua komunikasi ke Google Sheets
+// API LAYER — Supabase REST API
 // ═══════════════════════════════════════════
-async function api(action, params={}) {
+const SB_HEADERS = {
+  'Content-Type': 'application/json',
+  'apikey': SUPA_KEY,
+  'Authorization': 'Bearer ' + SUPA_KEY,
+  'Prefer': 'return=representation'
+};
+
+// GET rows dari tabel
+async function sbGet(table, query='') {
   try {
-    const url = GAS_URL + '?action=' + action + '&' + new URLSearchParams(params);
-    const r = await fetch(url);
-    return await r.json();
-  } catch(e) { return { ok: false, error: e.toString() }; }
+    const r = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+query, {headers: SB_HEADERS});
+    const d = await r.json();
+    return Array.isArray(d) ? d : [];
+  } catch(e) { return []; }
 }
 
-async function apiPost(action, data={}) {
+// INSERT row
+async function sbInsert(table, data) {
   try {
-    const r = await fetch(GAS_URL, {
-      method: 'POST',
-      body: JSON.stringify({ action, ...data })
+    const r = await fetch(SUPA_URL+'/rest/v1/'+table, {
+      method: 'POST', headers: SB_HEADERS,
+      body: JSON.stringify(data)
     });
-    return await r.json();
-  } catch(e) { return { ok: false, error: e.toString() }; }
+    const d = await r.json();
+    return {ok: r.ok, data: d};
+  } catch(e) { return {ok:false, error:e.toString()}; }
+}
+
+// UPDATE row
+async function sbUpdate(table, match, data) {
+  try {
+    const q = Object.entries(match).map(([k,v])=>k+'=eq.'+encodeURIComponent(v)).join('&');
+    const r = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+q, {
+      method: 'PATCH', headers: SB_HEADERS,
+      body: JSON.stringify(data)
+    });
+    return {ok: r.ok};
+  } catch(e) { return {ok:false, error:e.toString()}; }
+}
+
+// DELETE row
+async function sbDelete(table, match) {
+  try {
+    const q = Object.entries(match).map(([k,v])=>k+'=eq.'+encodeURIComponent(v)).join('&');
+    const r = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+q, {
+      method: 'DELETE', headers: SB_HEADERS
+    });
+    return {ok: r.ok};
+  } catch(e) { return {ok:false, error:e.toString()}; }
+}
+
+// UPSERT row
+async function sbUpsert(table, data) {
+  try {
+    const r = await fetch(SUPA_URL+'/rest/v1/'+table, {
+      method: 'POST',
+      headers: {...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation'},
+      body: JSON.stringify(data)
+    });
+    return {ok: r.ok};
+  } catch(e) { return {ok:false, error:e.toString()}; }
 }
 
 function showLoading(msg='Memuat...') {
@@ -689,38 +735,18 @@ function goAuth() { showScr('scr-auth'); }
 async function init() {
   showLoading('Memuat YukKerja...');
   try {
-    // Selalu cek ke Google Sheets apakah sudah ada Super Manager
-    const ping = await api('ping');
-    if (!ping.ok) throw new Error('Tidak bisa konek ke server');
-
-    // Pastikan sheet sudah ada
-    await api('init');
-
-    // Cek Super Manager di Google Sheets
-    const users = await api('getUsers');
-    const hasSM = Array.isArray(users) && users.some(u =>
-      u.role === 'superManager' && u.status === 'active'
-    );
+    // Cek ke Supabase apakah sudah ada Super Manager
+    const users = await sbGet('users', 'role=eq.superManager&status=eq.active');
     hideLoading();
-    if (hasSM) {
+    if (users.length > 0) {
       showScr('scr-auth'); // Sudah ada SM → langsung login
     } else {
       showScr('scr-setup'); // Belum ada SM → setup dulu
     }
   } catch(e) {
     hideLoading();
-    // Kalau gagal konek ke server → fallback ke localStorage
-    OFFLINE = true;
-    load();
-    const hasSM = Object.values(U).some(u =>
-      u.role === 'superManager' && u.status === 'active'
-    );
-    if (hasSM) {
-      showScr('scr-auth');
-    } else {
-      showScr('scr-setup');
-      toast('Tidak bisa konek ke server. Mode offline.','wa');
-    }
+    toast('Tidak bisa konek ke server ❌','er');
+    showScr('scr-setup');
   }
 }
 
@@ -750,25 +776,12 @@ async function doSetup() {
   if (!vpw(pw)) { toast('Password harus min 8 karakter, huruf besar, angka & simbol 🔒','er'); return; }
   if (pw !== pw2) { toast('Password tidak cocok ❌','er'); return; }
   const uname = pan[0].toUpperCase() + pan.slice(1).toLowerCase() + 'SM';
-  const userData = { id:email, nama:sx(nama), pan:sx(pan), email, hp, div:'SM', uname, role:'superManager', pw:H(pw), status:'active', tgl:td() };
+  const userData = { id:email, nama:sx(nama), panggilan:sx(pan), email, hp, div:'SM', uname, role:'superManager', pw:H(pw), status:'active', tgl:td() };
 
   showLoading('Membuat akun Super Manager...');
-  try {
-    // Simpan ke Google Sheets
-    const res = await apiPost('setupSM', userData);
-    hideLoading();
-    if (!res.ok) {
-      toast(res.msg || 'Gagal menyimpan ke server ❌','er');
-      return;
-    }
-  } catch(e) {
-    hideLoading();
-    // Fallback ke localStorage kalau server tidak bisa diakses
-    OFFLINE = true;
-    U[email] = userData;
-    save();
-    toast('Server tidak bisa diakses, data disimpan lokal ⚠️','wa');
-  }
+  const res = await sbInsert('users', userData);
+  hideLoading();
+  if (!res.ok) { toast('Gagal membuat akun ❌ Coba lagi','er'); return; }
 
   toast('Akun Super Manager berhasil dibuat! 🎉','ok');
   ME = userData;
@@ -812,78 +825,85 @@ async function doLogin() {
   const pw  = $('lp').value;
   if (!lid||!pw) { toast('Isi username/email dan password 📝','wa'); return; }
 
-  if (OFFLINE) {
-    load();
-    let user = U[lid] || Object.values(U).find(u => u.uname && u.uname.toLowerCase()===lid);
-    if (!user) { if(PEND.find(u=>u.email===lid||u.uname.toLowerCase()===lid)){toast('Akunmu masih menunggu persetujuan ⏳','wa');return;} toast('Akun tidak ditemukan 🔍','er'); return; }
-    if (user.status!=='active') { toast('Akun belum aktif ⏳','wa'); return; }
-    if (H(pw) !== user.pw) { toast('Password salah ❌','er'); return; }
-    ME = user; showScr('app'); setupApp(); toast('Selamat datang, @'+ME.uname+'! 🎉','ok');
-    return;
+  showLoading('Memeriksa akun...');
+  // Cari user by email atau username di Supabase
+  let users = await sbGet('users', 'email=eq.'+encodeURIComponent(lid)+'&status=eq.active');
+  if (!users.length) {
+    users = await sbGet('users', 'uname=eq.'+encodeURIComponent(lid)+'&status=eq.active');
+  }
+  hideLoading();
+
+  if (!users.length) {
+    // Cek apakah ada di pending
+    const pend = await sbGet('pending', 'email=eq.'+encodeURIComponent(lid));
+    if (pend.length) { toast('Akunmu masih menunggu persetujuan ⏳','wa'); return; }
+    toast('Akun tidak ditemukan 🔍','er'); return;
   }
 
-  showLoading('Memeriksa akun...');
-  const res = await apiPost('login', { lid, pw: H(pw) });
-  hideLoading();
-  if (!res.ok) { toast(res.msg || 'Login gagal ❌','er'); return; }
-  ME = res.user;
-  // Load semua data awal
+  const user = users[0];
+  if (user.status !== 'active') { toast('Akun belum aktif ⏳','wa'); return; }
+  if (H(pw) !== user.pw) { toast('Password salah ❌','er'); return; }
+
+  ME = user;
   await loadAllData();
-  showScr('app'); setupApp(); toast('Selamat datang, @'+ME.uname+'! 🎉','ok');
+  showScr('app'); setupApp();
+  toast('Selamat datang, @'+ME.uname+'! 🎉','ok');
 }
 
 async function loadAllData() {
   showLoading('Memuat data...');
   try {
     const [users, pend, pj, cuti, abs, notif, cmds, kash, kacc] = await Promise.all([
-      api('getUsers'), api('getPending'), api('getPengajuan'),
-      api('getCuti'), api('getAbsensi'), api('getNotif', {uname: ME?.uname||''}),
-      api('getPerintah'), api('getKasirHist'), api('getKasirAkses')
+      sbGet('users'),
+      sbGet('pending'),
+      sbGet('pengajuan', 'order=tgl.desc'),
+      sbGet('cuti', 'order=tgl.desc'),
+      sbGet('absensi', 'order=tgl.desc'),
+      sbGet('notifikasi', 'target=in.('+encodeURIComponent(ME?.uname||'')+',all)&order=tgl.desc'),
+      sbGet('perintah', 'order=tgl.desc'),
+      sbGet('kasir_history', 'order=tgl.desc'),
+      sbGet('kasir_akses'),
     ]);
-    if(Array.isArray(users)) U = Object.fromEntries(users.map(u=>[u.id,u]));
-    if(Array.isArray(pend))  PEND  = pend;
-    if(Array.isArray(pj))    PJ    = pj.map(p=>({...p, items: typeof p.items==='string'?JSON.parse(p.items||'[]'):p.items||[]}));
-    if(Array.isArray(cuti))  CUTI  = cuti;
-    if(Array.isArray(abs))   ABS   = abs;
-    if(Array.isArray(notif)) NOTIF = notif;
-    if(Array.isArray(cmds))  CMDS  = cmds;
-    if(Array.isArray(kash))  KASH  = kash;
-    if(Array.isArray(kacc))  KACC  = Object.fromEntries(kacc.map(k=>[k.user_id, k.aktif]));
-  } catch(e) { toast('Gagal memuat data: '+e.message,'wa'); }
+    U    = Object.fromEntries(users.map(u=>[u.id,u]));
+    PEND = pend;
+    PJ   = pj.map(p=>({...p, items: typeof p.items==='string'?tryParse(p.items):p.items||[]}));
+    CUTI = cuti;
+    ABS  = abs.map(a=>({...a, in:a.jam_in, out:a.jam_out}));
+    NOTIF= notif;
+    CMDS = cmds;
+    KASH = kash;
+    KACC = Object.fromEntries(kacc.map(k=>[k.user_id, k.aktif]));
+  } catch(e) { toast('Gagal memuat data ⚠️','wa'); }
   hideLoading();
 }
 
-async function doRegister() {
-  const nama  = $('rn').value.trim();
-  const pan   = $('rp').value.trim().replace(/[^a-zA-Z]/g,'');
-  const div   = $('rdv').value;
-  const email = $('re').value.trim().toLowerCase();
-  const hp    = $('rh').value.trim();
-  const pw    = $('rp1').value;
-  const pw2   = $('rp2').value;
-  if (!nama||!pan||!div||!email||!hp) { toast('Lengkapi semua data 📝','wa'); return; }
-  if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) { toast('Format email tidak valid 📧','er'); return; }
-  if (!vpw(pw)) { toast('Password min 8 karakter, huruf besar, angka & simbol 🔒','er'); return; }
-  if (pw!==pw2) { toast('Password tidak cocok ❌','er'); return; }
-  let uname = pan[0].toUpperCase()+pan.slice(1).toLowerCase()+div;
-  const regData = { id:email, nama:sx(nama), pan:sx(pan), email, hp, div, uname, role:'staff', pw:H(pw), status:'pending', tgl:td() };
+function tryParse(s) { try { return JSON.parse(s); } catch { return []; } }
 
-  if (OFFLINE) {
-    load();
-    if(U[email]){toast('Email sudah terdaftar 📧','er');return;}
-    if(PEND.find(u=>u.email===email)){toast('Email sudah dalam antrian ⏳','wa');return;}
-    const taken=[...Object.values(U).map(u=>u.uname),...PEND.map(u=>u.uname)];
-    if(taken.includes(uname)){let n=2;while(taken.includes(uname+n))n++;uname+=n;regData.uname=uname;}
-    PEND.push(regData); NOTIF.unshift({msg:'✨ Pendaftaran baru: '+sx(nama)+' (@'+uname+')',unread:true,tgl:'Baru saja'}); save();
-  } else {
-    showLoading('Mendaftarkan akun...');
-    const res = await apiPost('register', regData);
-    hideLoading();
-    if (!res.ok) { toast(res.msg || 'Gagal mendaftar ❌','er'); return; }
-    uname = res.uname;
-  }
+async function doRegister(){
+  const nama=$('rn').value.trim(), pan=$('rp').value.trim().replace(/[^a-zA-Z]/g,'');
+  const div=$('rdv').value, email=$('re').value.trim().toLowerCase();
+  const hp=$('rh').value.trim(), pw=$('rp1').value, pw2=$('rp2').value;
+  if(!nama||!pan||!div||!email||!hp){toast('Lengkapi semua data 📝','wa');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Format email tidak valid 📧','er');return;}
+  if(!vpw(pw)){toast('Password min 8 karakter, huruf besar, angka & simbol 🔒','er');return;}
+  if(pw!==pw2){toast('Password tidak cocok ❌','er');return;}
+  let uname=pan[0].toUpperCase()+pan.slice(1).toLowerCase()+div;
+  showLoading('Mendaftarkan akun...');
+  // Cek email sudah ada
+  const existing=await sbGet('users','email=eq.'+encodeURIComponent(email)+'&limit=1');
+  const existPend=await sbGet('pending','email=eq.'+encodeURIComponent(email)+'&limit=1');
+  if(existing.length){hideLoading();toast('Email sudah terdaftar 📧','er');return;}
+  if(existPend.length){hideLoading();toast('Email sudah dalam antrian ⏳','wa');return;}
+  // Cek uname unik
+  const taken1=await sbGet('users','uname=eq.'+encodeURIComponent(uname)+'&limit=1');
+  const taken2=await sbGet('pending','uname=eq.'+encodeURIComponent(uname)+'&limit=1');
+  if(taken1.length||taken2.length){let n=2;while(true){const t=await sbGet('users','uname=eq.'+encodeURIComponent(uname+n)+'&limit=1');if(!t.length)break;n++;}uname=uname+(taken1.length?2:'');}
+  const data={id:email,nama:sx(nama),panggilan:sx(pan),email,hp,div,uname,role:'staff',pw:H(pw),status:'pending',tgl:td()};
+  const res=await sbInsert('pending',data);
+  hideLoading();
+  if(!res.ok){toast('Gagal mendaftar ❌','er');return;}
   toast('Pendaftaran berhasil! Menunggu persetujuan 🎉','ok');
-  $('pu-show').textContent = '@'+uname; showScr('scr-pending');
+  $('pu-show').textContent='@'+uname; showScr('scr-pending');
 }
 
 function doLogout() { if(OFFLINE)save(); ME=null; cind=false; U={}; PEND=[]; PJ=[]; CUTI=[]; ABS=[]; NOTIF=[]; CMDS=[]; KASH=[]; KACC={}; showScr('scr-auth'); toast('Sampai jumpa! 👋','ok'); }
@@ -950,20 +970,26 @@ function startClock() {
 // ═══════════════════════════════════════════
 // ABSENSI
 // ═══════════════════════════════════════════
-async function doCin() {
+async function doCin(){
   if(cind){toast('Sudah Clock In hari ini 😄','wa');return;}
   const tipe=$('atip').value; cind=true;
   const now=new Date();
-  const absEntry = {id:'A'+Date.now(),tgl:td(),jam_in:now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}),jam_out:'-',tipe,status:'Hadir',uname:ME.uname};
-  ABS.unshift({...absEntry, in:absEntry.jam_in, out:absEntry.jam_out});
-  if(!OFFLINE){await apiPost('clockIn',{data:absEntry});}else SS('abs',ABS);
-  toast('Clock In ☀️ '+now.toLocaleTimeString('id-ID'),'ok');
-  addNotif('☀️ Clock In sukses'); rAbs(); rDashAbs();
+  const jamIn=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  const data={id:'A'+Date.now(),uname:ME.uname,tgl:td(),jam_in:jamIn,jam_out:'-',tipe,status:'Hadir',lokasi:$('alok').value||''};
+  await sbInsert('absensi',data);
+  ABS.unshift({...data,in:data.jam_in,out:data.jam_out});
+  toast('Clock In ☀️ '+jamIn,'ok'); addNotif('☀️ Clock In sukses jam '+jamIn);
+  rAbs(); rDashAbs();
 }
-function doCout() {
+async function doCout(){
   if(!cind){toast('Belum Clock In 😅','wa');return;}
-  const now=new Date(); if(ABS[0])ABS[0].out=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-  cind=false; SS('abs',ABS); toast('Clock Out 🌙 Sampai besok!','ok'); rAbs();
+  const now=new Date();
+  const jamOut=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
+  if(ABS[0]){
+    await sbUpdate('absensi',{id:ABS[0].id},{jam_out:jamOut});
+    ABS[0].out=jamOut; ABS[0].jam_out=jamOut;
+  }
+  cind=false; toast('Clock Out 🌙 Sampai besok!','ok'); rAbs();
 }
 const tbdg=t=>({office:'<span class="bdg bin">🏢</span>',wfh:'<span class="bdg bne">🏠</span>',event:'<span class="bdg bwa">🎪</span>',dinas:'<span class="bdg bgo">✈️</span>'}[t]||t);
 function rAbs() {
@@ -980,13 +1006,16 @@ function pSelfie(inp) {
 // ═══════════════════════════════════════════
 // CUTI
 // ═══════════════════════════════════════════
-async function subCuti() {
+async function subCuti(){
   const from=$('cfr').value, to=$('cto').value, jn=$('cjn').value, al=$('cal').value;
   if(!from||!to){toast('Lengkapi tanggal 📅','wa');return;}
-  CUTI.unshift({id:'CT'+Date.now(),nama:ME.nama,uname:ME.uname,dari:from,sampai:to,jenis:jn,alasan:sx(al),status:'pending',tgl:td()});
-  if(!OFFLINE){showLoading('Mengirim cuti...');const res=await apiPost('addCuti',{data:CUTI[0]});hideLoading();if(!res.ok){toast('Gagal kirim','er');CUTI.shift();return;}}
-  else SS('cuti',CUTI);
-  closeM('m-cuti'); rCutiList(); uCutiSum(); addNotif('🏖️ Pengajuan cuti terkirim'); toast('Cuti terkirim! 🏖️','ok');
+  const data={id:'CT'+Date.now(),nama:ME.nama,uname:ME.uname,dari:from,sampai:to,jenis:jn,alasan:sx(al),status:'pending',tgl:td()};
+  showLoading('Mengirim cuti...');
+  const res=await sbInsert('cuti',data);
+  hideLoading();
+  if(!res.ok){toast('Gagal kirim ❌','er');return;}
+  CUTI.unshift(data); closeM('m-cuti'); rCutiList(); uCutiSum();
+  addNotif('🏖️ Pengajuan cuti terkirim'); toast('Cuti terkirim! 🏖️','ok');
   ['cfr','cto','cal'].forEach(id=>$(id).value='');
 }
 function rCutiList() {
@@ -1016,20 +1045,19 @@ function rmItem(id){const el=$('ir-'+id);if(el)el.remove();calcTot();}
 function calcTot(){let t=0;document.querySelectorAll('[id^="ij-"]').forEach(e=>t+=parseFloat(e.value)||0);$('pjtot').textContent='Total: '+rp(t);}
 function togNota(){const n=$('notasec');if(n)n.style.display=$('pjj').value==='reimburse'?'block':'none';}
 function pNota(inp){const f=inp.files[0];if(!f)return;$('notaprev').textContent='✅ '+f.name;toast('Nota diupload 📎','ok');}
-async function subPJ() {
+async function subPJ(){
   const jenis=$('pjj').value, klas=$('pjk').value, desk=$('pjd').value.trim(), div=$('pjdv').value;
   if(!desk){toast('Isi deskripsi 📝','wa');return;}
   const items=[];
   document.querySelectorAll('[id^="in-"]').forEach(e=>{const id=e.id.replace('in-','');const j=parseFloat($('ij-'+id)?.value)||0;if(e.value)items.push({n:sx(e.value),j});});
   if(!items.length){toast('Tambah minimal 1 item 🛒','wa');return;}
   const total=items.reduce((s,i)=>s+i.j,0);
-  PJ.unshift({id:'PJ'+String(PJ.length+1).padStart(3,'0'),nama:ME.nama,uname:ME.uname,uid:ME.id,jenis,desk:sx(desk),div,items,total,klas,status:'pending',tgl:td()});
-  if (!OFFLINE) {
-    showLoading('Mengirim pengajuan...');
-    const res = await apiPost('addPengajuan', {data: PJ[0]});
-    hideLoading();
-    if (!res.ok) { toast('Gagal kirim: '+(res.msg||res.error),'er'); PJ.shift(); return; }
-  } else { SS('pj',PJ); }
+  const data={id:'PJ'+Date.now(),nama:ME.nama,uname:ME.uname,uid:ME.id,jenis,desk:sx(desk),div,items:JSON.stringify(items),total,klas,status:'pending',tgl:td()};
+  showLoading('Mengirim pengajuan...');
+  const res=await sbInsert('pengajuan',data);
+  hideLoading();
+  if(!res.ok){toast('Gagal kirim ❌','er');return;}
+  PJ.unshift({...data,items});
   $('ilist').innerHTML=''; $('pjd').value=''; iCnt=0; calcTot();
   toast('Pengajuan terkirim! 🚀','ok'); addNotif('💸 Pengajuan '+jenis+' '+rp(total)+' terkirim');
   sit('pj','pj-l',null); rPJ();
@@ -1074,20 +1102,22 @@ function rAppr() {
 }
 async function apvPJ(id){
   const p=PJ.find(x=>x.id===id); if(!p)return;
+  await sbUpdate('pengajuan',{id},{status:'approved'});
   p.status='approved';
-  if(!OFFLINE){showLoading('Menyetujui...');await apiPost('approvePJ',{id,tgl:td()});hideLoading();}
-  else SS('pj',PJ);
+  // Notif ke pemohon
+  await sbInsert('notifikasi',{id:'N'+Date.now(),target:p.uname,msg:'✅ Pengajuan '+id+' ('+p.desk+') disetujui!',unread:true,tgl:td()});
   toast(id+' disetujui! ✅','ok'); addNotif('✅ '+id+' disetujui');
-  rAppr();rSD();rKasir();
+  rAppr(); rSD(); rKasir();
 }
 function opTolak(id){tolakId=id;$('tolrs').value='';openM('m-tolak');}
 async function konfTolak(){
-  const rs=$('tolrs').value.trim();if(!rs){toast('Isi alasan ✍️','wa');return;}
-  const p=PJ.find(x=>x.id===tolakId);if(p){p.status='rejected';p.reason=sx(rs);
-    if(!OFFLINE){showLoading('Menolak...');await apiPost('rejectPJ',{id:tolakId,reason:sx(rs),tgl:td()});hideLoading();}
-    else SS('pj',PJ);
-    toast(tolakId+' ditolak ❌','er');addNotif('❌ '+tolakId+' ditolak');}
-  closeM('m-tolak');rAppr();rSD();rKasir();
+  const rs=$('tolrs').value.trim(); if(!rs){toast('Isi alasan ✍️','wa');return;}
+  const p=PJ.find(x=>x.id===tolakId); if(!p)return;
+  await sbUpdate('pengajuan',{id:tolakId},{status:'rejected',reason:sx(rs)});
+  await sbInsert('notifikasi',{id:'N'+Date.now(),target:p.uname,msg:'❌ Pengajuan '+tolakId+' ditolak: '+sx(rs),unread:true,tgl:td()});
+  p.status='rejected'; p.reason=sx(rs);
+  toast(tolakId+' ditolak ❌','er'); addNotif('❌ '+tolakId+' ditolak');
+  closeM('m-tolak'); rAppr(); rSD(); rKasir();
 }
 
 // ═══════════════════════════════════════════
@@ -1157,15 +1187,21 @@ async function apvU(email){
   const idx=PEND.findIndex(u=>u.email===email); if(idx===-1)return;
   const u=PEND[idx], key='rs-'+email.replace(/[@.]/g,'_');
   const role=($( key)||{}).value||'staff';
-  u.role=role; u.status='active'; U[email]=u; PEND.splice(idx,1);
-  if(!OFFLINE){showLoading('Menyetujui akun...');await apiPost('approveUser',{email,role,roleLabel:RL[role],tgl:td()});hideLoading();}
-  else save();
+  u.role=role; u.status='active';
+  showLoading('Menyetujui akun...');
+  await sbInsert('users', u);
+  await sbDelete('pending', {email});
+  hideLoading();
+  U[email]=u; PEND.splice(idx,1);
   addNotif('✅ @'+sx(u.uname)+' diaktifkan sebagai '+RL[role]);
   toast('Akun @'+sx(u.uname)+' disetujui! 🎉','ok'); rSD();
 }
 async function rejU(email){
   const idx=PEND.findIndex(u=>u.email===email); if(idx===-1)return;
-  const u=PEND[idx]; PEND.splice(idx,1); if(!OFFLINE){await apiPost('rejectUser',{email});}else save(); toast('Pendaftaran '+sx(u.nama)+' ditolak ❌','er'); rSD();
+  const u=PEND[idx];
+  await sbDelete('pending',{email});
+  PEND.splice(idx,1);
+  toast('Pendaftaran '+sx(u.nama)+' ditolak ❌','er'); rSD();
 }
 function opRole(uid){
   roleUid=uid; const u=U[uid]; if(!u)return;
@@ -1173,8 +1209,9 @@ function opRole(uid){
   $('rsel').value=u.role; openM('m-role');
 }
 async function saveRole(){
-  const u=U[roleUid]; if(!u)return; u.role=$('rsel').value;
-  if(!OFFLINE){await apiPost('updateRole',{uid:roleUid,role:u.role});}else save();
+  const u=U[roleUid]; if(!u)return;
+  u.role=$('rsel').value;
+  await sbUpdate('users',{id:roleUid},{role:u.role});
   toast('Role diubah ke '+RL[u.role]+' 💾','ok'); closeM('m-role'); rSD();
 }
 function delU(uid){if(!confirm('Nonaktifkan akun ini?'))return;delete U[uid];save();toast('Akun dinonaktifkan 🚫','wa');rSD();}
@@ -1186,8 +1223,21 @@ function rSDcuti(){
     <td><div style="display:flex;gap:3px">${c.status==='pending'?`<button class="btn bg xs" onclick="apvCuti('${c.id}')">✅</button><button class="btn bd xs" onclick="rejCuti('${c.id}')">❌</button>`:''}</div></td>
     </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--t3)">Belum ada 🏖️</td></tr>';
 }
-async function apvCuti(id){const c=CUTI.find(x=>x.id===id);if(c){c.status='approved';if(!OFFLINE){await apiPost('approveCuti',{id,tgl:td()});}else SS('cuti',CUTI);toast('Cuti disetujui! 🏖️','ok');addNotif('✅ Cuti @'+c.uname+' disetujui');}rSDcuti();rCutiList();uCutiSum();}
-async function rejCuti(id){const c=CUTI.find(x=>x.id===id);if(c){c.status='rejected';if(!OFFLINE){await apiPost('rejectCuti',{id,tgl:td()});}else SS('cuti',CUTI);toast('Cuti ditolak ❌','er');}rSDcuti();rCutiList();uCutiSum();}
+async function apvCuti(id){
+  const c2=CUTI.find(x=>x.id===id); if(!c2)return;
+  await sbUpdate('cuti',{id},{status:'approved'});
+  await sbInsert('notifikasi',{id:'N'+Date.now(),target:c2.uname,msg:'✅ Cuti '+c2.jenis+' ('+c2.dari+' s/d '+c2.sampai+') disetujui!',unread:true,tgl:td()});
+  c2.status='approved';
+  toast('Cuti disetujui! 🏖️','ok'); addNotif('✅ Cuti @'+c2.uname+' disetujui');
+  rSDcuti(); rCutiList(); uCutiSum();
+}
+async function rejCuti(id){
+  const c2=CUTI.find(x=>x.id===id); if(!c2)return;
+  await sbUpdate('cuti',{id},{status:'rejected'});
+  c2.status='rejected';
+  toast('Cuti ditolak ❌','er');
+  rSDcuti(); rCutiList(); uCutiSum();
+}
 function rKasTab(){
   const tb=$('kast'); if(!tb)return;
   tb.innerHTML=Object.values(U).filter(u=>u.role!=='superManager').map(u=>`
@@ -1197,16 +1247,23 @@ function rKasTab(){
     <td><button class="btn bs sm" onclick="togKas('${u.id}','${sx(u.uname)}')">Toggle</button></td></tr>`
   ).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--t3)">Tidak ada</td></tr>';
 }
-async function togKas(id,un){KACC[id]=!KACC[id];if(!OFFLINE){await apiPost('setKasirAkses',{user_id:id,aktif:KACC[id]});}else SS('kacc',KACC);toast('Akses kasir @'+un+' '+(KACC[id]?'diberikan 🔑':'dicabut 🔒'),KACC[id]?'ok':'wa');rKasTab();rKasir();}
+async function togKas(id,un){
+  KACC[id]=!KACC[id];
+  const existing=await sbGet('kasir_akses','user_id=eq.'+encodeURIComponent(id)+'&limit=1');
+  if(existing.length) await sbUpdate('kasir_akses',{user_id:id},{aktif:KACC[id]});
+  else await sbInsert('kasir_akses',{user_id:id,aktif:KACC[id]});
+  toast('Akses kasir @'+un+' '+(KACC[id]?'diberikan 🔑':'dicabut 🔒'),KACC[id]?'ok':'wa');
+  rKasTab(); rKasir();
+}
 async function sendCmd(){
   const to=$('cmdt').value,jd=$('cmdjd').value.trim(),dt=$('cmddt').value.trim(),pr=$('cmdp').value;
   if(!jd||!dt){toast('Isi judul dan detail 📝','wa');return;}
-  const cmdData={id:'C'+Date.now(),target:to,judul:sx(jd),detail:sx(dt),prioritas:pr,tgl:td(),dari:ME.uname};
-  CMDS.unshift(cmdData);
-  if(!OFFLINE){await apiPost('addPerintah',{data:cmdData});}else SS('cmds',CMDS);
+  const data={id:'C'+Date.now(),target:to,judul:sx(jd),detail:sx(dt),prioritas:pr,tgl:td(),dari:ME.uname};
+  await sbInsert('perintah',data);
+  CMDS.unshift(data);
   const ch=$('cmdhist');
   ch.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px">📢 Terkirim</div>'+
-    CMDS.map(c=>`<div style="background:var(--s2);border-radius:var(--rr);padding:10px 14px;margin-bottom:7px;border-left:3px solid ${c.pr==='urgent'?'var(--er)':'var(--r2)'}"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><b style="font-size:13px">${c.jd}</b><span style="font-size:11px;color:var(--t3)">${c.tgl}</span></div><div style="font-size:12px;color:var(--t2)">${c.dt}</div><div style="font-size:11px;color:var(--t3);margin-top:3px">👥 ${c.to} · ${c.pr==='urgent'?'<span style="color:var(--er)">🔴 URGENT</span>':'📌 Normal'}</div></div>`).join('');
+    CMDS.map(c=>`<div style="background:var(--s2);border-radius:var(--rr);padding:10px 14px;margin-bottom:7px;border-left:3px solid ${c.prioritas==='urgent'?'var(--er)':'var(--r2)'}"><div style="display:flex;justify-content:space-between;margin-bottom:3px"><b style="font-size:13px">${c.judul}</b><span style="font-size:11px;color:var(--t3)">${c.tgl}</span></div><div style="font-size:12px;color:var(--t2)">${c.detail}</div><div style="font-size:11px;color:var(--t3);margin-top:3px">👥 ${c.target} · ${c.prioritas==='urgent'?'<span style="color:var(--er)">🔴 URGENT</span>':'📌 Normal'}</div></div>`).join('');
   ['cmdjd','cmddt'].forEach(id=>$(id).value='');
   addNotif('📢 Perintah "'+sx(jd)+'" dikirim ke '+to); toast('Perintah terkirim! 📢','ok');
 }
@@ -1237,12 +1294,15 @@ function pBukti(inp){const f=inp.files[0];if(!f)return;$('bprev').textContent='�
 async function konfBayar(){
   const ref=$('bref').value.trim(),met=$('bmet').value;
   if(!ref){toast('Isi nomor referensi 📝','wa');return;}
-  const p=PJ.find(x=>x.id===bayarId);
-  if(p){
-    const kData={id:'K'+Date.now(),nama:p.nama,uname:p.uname,desk:p.desk,total:p.total,met,ref,tgl:td()};
-    p.status='paid'; KASH.unshift(kData);
-    if(!OFFLINE){showLoading('Konfirmasi pembayaran...');await apiPost('bayarPJ',{pjId:bayarId,data:kData});hideLoading();}else save();
-    toast('Pembayaran '+p.id+' berhasil! 🎉','ok');addNotif('💰 Pembayaran '+p.id+' '+rp(p.total)+' dikonfirmasi via '+met);}
+  const p=PJ.find(x=>x.id===bayarId); if(!p)return;
+  const kData={id:'K'+Date.now(),nama:p.nama,uname:p.uname,desk:p.desk,total:p.total,met,ref,tgl:td()};
+  showLoading('Konfirmasi pembayaran...');
+  await sbUpdate('pengajuan',{id:bayarId},{status:'paid'});
+  await sbInsert('kasir_history',kData);
+  await sbInsert('notifikasi',{id:'N'+Date.now(),target:p.uname,msg:'💰 Pembayaran '+bayarId+' '+rp(p.total)+' dikonfirmasi via '+met,unread:true,tgl:td()});
+  hideLoading();
+  p.status='paid'; KASH.unshift(kData);
+  toast('Pembayaran '+p.id+' berhasil! 🎉','ok'); addNotif('💰 Pembayaran dikonfirmasi');
   closeM('m-bayar'); rKasir(); rSD();
 }
 function rKhist(){
