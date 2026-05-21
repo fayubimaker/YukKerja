@@ -255,8 +255,8 @@ tr:hover td{background:var(--s2)}
 
     <!-- LOGIN -->
     <div id="frm-li">
-      <label class="al">👤 Username atau Email</label>
-      <input class="ai" id="li" placeholder="BudiOPS atau budi@email.com">
+      <label class="al">👤 Username</label>
+      <input class="ai" id="li" placeholder="Contoh: BudiOPS">
       <label class="al">🔒 Password</label>
       <div class="pw"><input class="ai" id="lp" type="password" placeholder="••••••••"><button class="eye" onclick="tpw('lp',this)">👁</button></div>
       <button class="abtn" onclick="doLogin()">🚀 Masuk Sekarang</button>
@@ -279,20 +279,16 @@ tr:hover td{background:var(--s2)}
         <div><label class="al">👤 Nama Lengkap</label><input class="ai" id="rn" placeholder="Nama lengkap" oninput="guRe()"></div>
         <div><label class="al">😊 Panggilan</label><input class="ai" id="rp" placeholder="Panggilan" oninput="guRe()"></div>
       </div>
-      <div class="arow">
-        <div><label class="al">🏢 Divisi</label>
-          <select class="ai" id="rdv" onchange="guRe()">
-            <option value="">— Pilih —</option>
-            <option value="FAT">FAT</option>
-            <option value="MKT">Marketing</option>
-            <option value="STR">Store</option>
-            <option value="PD">Produk & Development</option>
-          </select>
-        </div>
-        <div><label class="al">📧 Email</label><input class="ai" id="re" type="email" placeholder="email@kantor.com"></div>
+      <div class="fg" style="margin-bottom:11px">
+        <label class="al">🏢 Divisi</label>
+        <select class="ai" id="rdv" onchange="guRe()">
+          <option value="">— Pilih —</option>
+          <option value="FAT">FAT</option>
+          <option value="MKT">Marketing</option>
+          <option value="STR">Store</option>
+          <option value="PD">Produk & Development</option>
+        </select>
       </div>
-      <label class="al">📱 No. WhatsApp</label>
-      <input class="ai" id="rh" type="tel" placeholder="08xxxxxxxxxx" oninput="this.value=this.value.replace(/\D/g,'')">
       <label class="al">🎫 Username Otomatis</label>
       <div class="uprev" id="re-prev"><span>🎫</span><div><div style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:.5px">Username</div><div class="uv" id="re-uv">—</div></div></div>
       <div class="uphint" id="re-hint">✏️ Isi nama panggilan & pilih divisi</div>
@@ -909,33 +905,32 @@ function fd(e,p) { $('li').value=e; $('lp').value=p; toast('Demo siap! Klik Masu
 async function doLogin() {
   const lid = $('li').value.trim().toLowerCase();
   const pw  = $('lp').value;
-  if (!lid||!pw) { toast('Isi username/email dan password 📝','wa'); return; }
+  if (!lid||!pw) { toast('Isi username dan password 📝','wa'); return; }
   showLoading('Memeriksa akun...');
   try {
-    // Ambil semua user lalu filter di client (hindari masalah encoding URL)
     const allUsers = await sbGet('users', 'select=*&limit=500');
+    // Cari by username (atau email kalau ada)
     const user = allUsers.find(u =>
-      (u.email && u.email.toLowerCase() === lid) ||
-      (u.uname && u.uname.toLowerCase() === lid)
+      (u.uname && u.uname.toLowerCase() === lid) ||
+      (u.email && u.email.toLowerCase() === lid)
     );
     hideLoading();
     if (!user) {
-      const allPend = await sbGet('pending', 'select=*&limit=500');
+      const allPend = await sbGet('pending', 'select=uname,email&limit=500');
       const isPend = allPend.find(u =>
-        (u.email && u.email.toLowerCase() === lid) ||
-        (u.uname && u.uname.toLowerCase() === lid)
+        (u.uname && u.uname.toLowerCase() === lid) ||
+        (u.email && u.email.toLowerCase() === lid)
       );
       if (isPend) { toast('Akunmu masih menunggu persetujuan ⏳','wa'); return; }
-      toast('Akun tidak ditemukan 🔍','er'); return;
+      toast('Username tidak ditemukan 🔍','er'); return;
     }
     if (user.status !== 'active') { toast('Akun belum aktif ⏳','wa'); return; }
     if (H(pw) !== user.pw) { toast('Password salah ❌','er'); return; }
     ME = user;
-    // Simpan session ke localStorage
     localStorage.setItem('yk26_session', JSON.stringify({
       id: user.id, uname: user.uname, nama: user.nama,
-      role: user.role, div: user.div, hp: user.hp,
-      email: user.email, status: user.status
+      role: user.role, div: user.div, hp: user.hp||'',
+      email: user.email||'', status: user.status
     }));
     await loadAllData();
     showScr('app'); setupApp();
@@ -977,25 +972,29 @@ async function loadAllData() {
 function tryParse(s) { try { return JSON.parse(s); } catch { return []; } }
 
 async function doRegister(){
-  const nama=$('rn').value.trim(), pan=$('rp').value.trim().replace(/[^a-zA-Z]/g,'');
-  const div=$('rdv').value, email=$('re').value.trim().toLowerCase();
-  const hp=$('rh').value.trim(), pw=$('rp1').value, pw2=$('rp2').value;
-  if(!nama||!pan||!div||!email||!hp){toast('Lengkapi semua data 📝','wa');return;}
-  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Format email tidak valid 📧','er');return;}
+  const nama=sx($('rn').value.trim()), pan=$('rp').value.trim().replace(/[^a-zA-Z]/g,'');
+  const div=$('rdv').value, pw=$('rp1').value, pw2=$('rp2').value;
+  if(!nama||!pan||!div){toast('Lengkapi nama, panggilan & divisi 📝','wa');return;}
   if(!vpw(pw)){toast('Password min 8 karakter, huruf besar, angka & simbol 🔒','er');return;}
   if(pw!==pw2){toast('Password tidak cocok ❌','er');return;}
   let uname=pan[0].toUpperCase()+pan.slice(1).toLowerCase()+div;
   showLoading('Mendaftarkan akun...');
-  // Cek email sudah ada
-  const existing=await sbGet('users','email=eq.'+encodeURIComponent(email)+'&limit=1');
-  const existPend=await sbGet('pending','email=eq.'+encodeURIComponent(email)+'&limit=1');
-  if(existing.length){hideLoading();toast('Email sudah terdaftar 📧','er');return;}
-  if(existPend.length){hideLoading();toast('Email sudah dalam antrian ⏳','wa');return;}
-  // Cek uname unik
+  // Cek uname unik di users dan pending
   const taken1=await sbGet('users','uname=eq.'+encodeURIComponent(uname)+'&limit=1');
   const taken2=await sbGet('pending','uname=eq.'+encodeURIComponent(uname)+'&limit=1');
-  if(taken1.length||taken2.length){let n=2;while(true){const t=await sbGet('users','uname=eq.'+encodeURIComponent(uname+n)+'&limit=1');if(!t.length)break;n++;}uname=uname+(taken1.length?2:'');}
-  const data={id:email,nama:sx(nama),panggilan:sx(pan),email,hp,div,uname,role:'staff',pw:H(pw),status:'pending',tgl:td()};
+  if(taken1.length||taken2.length){
+    let n=2;
+    while(true){
+      const t1=await sbGet('users','uname=eq.'+encodeURIComponent(uname+n)+'&limit=1');
+      const t2=await sbGet('pending','uname=eq.'+encodeURIComponent(uname+n)+'&limit=1');
+      if(!t1.length&&!t2.length)break;
+      n++;
+    }
+    uname=uname+n;
+  }
+  // Gunakan uname sebagai ID unik (tidak ada email)
+  const uid = uname + '_' + Date.now();
+  const data={id:uid,nama,panggilan:sx(pan),email:'',hp:'',div,uname,role:'staff',pw:H(pw),status:'pending',tgl:td()};
   const res=await sbInsert('pending',data);
   hideLoading();
   if(!res.ok){toast('Gagal mendaftar ❌','er');return;}
