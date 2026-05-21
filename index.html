@@ -787,6 +787,28 @@ function togTujuan() {
 // INIT
 // ═══════════════════════════════════════════
 async function init() {
+  // Cek apakah ada session tersimpan
+  const savedSession = localStorage.getItem('yk26_session');
+  if (savedSession) {
+    try {
+      const session = JSON.parse(savedSession);
+      if (session && session.id && session.role) {
+        // Ada session — langsung masuk app, muat data di background
+        ME = session;
+        showScr('app');
+        setupApp();
+        // Muat data fresh di background
+        loadAllData().then(() => {
+          rDash();
+        });
+        return;
+      }
+    } catch(e) {
+      localStorage.removeItem('yk26_session');
+    }
+  }
+
+  // Tidak ada session — cek Supabase untuk SM
   showLoading('Memuat YukKerja...');
   try {
     const allUsers = await sbGet('users', 'select=role,status&limit=500');
@@ -800,7 +822,6 @@ async function init() {
   } catch(e) {
     hideLoading();
     console.error('Init error:', e);
-    // Kalau gagal konek, tampilkan setup (safer)
     showScr('scr-setup');
     toast('Tidak bisa konek ke Supabase ❌','er');
   }
@@ -843,6 +864,11 @@ async function doSetup() {
     return;
   }
 
+  localStorage.setItem('yk26_session', JSON.stringify({
+    id: userData.id, uname: userData.uname, nama: userData.nama,
+    role: userData.role, div: userData.div, hp: userData.hp,
+    email: userData.email, status: userData.status
+  }));
   toast('Akun Super Manager berhasil dibuat! 🎉','ok');
   ME = userData;
   showScr('app');
@@ -905,6 +931,12 @@ async function doLogin() {
     if (user.status !== 'active') { toast('Akun belum aktif ⏳','wa'); return; }
     if (H(pw) !== user.pw) { toast('Password salah ❌','er'); return; }
     ME = user;
+    // Simpan session ke localStorage
+    localStorage.setItem('yk26_session', JSON.stringify({
+      id: user.id, uname: user.uname, nama: user.nama,
+      role: user.role, div: user.div, hp: user.hp,
+      email: user.email, status: user.status
+    }));
     await loadAllData();
     showScr('app'); setupApp();
     toast('Selamat datang, @'+ME.uname+'! 🎉','ok');
@@ -971,7 +1003,12 @@ async function doRegister(){
   $('pu-show').textContent='@'+uname; showScr('scr-pending');
 }
 
-function doLogout() { if(OFFLINE)save(); ME=null; cind=false; U={}; PEND=[]; PJ=[]; CUTI=[]; ABS=[]; NOTIF=[]; CMDS=[]; KASH=[]; KACC={}; showScr('scr-auth'); toast('Sampai jumpa! 👋','ok'); }
+function doLogout() {
+  localStorage.removeItem('yk26_session');
+  if(OFFLINE)save();
+  ME=null; cind=false; U={}; PEND=[]; PJ=[]; CUTI=[]; ABS=[]; NOTIF=[]; CMDS=[]; KASH=[]; KACC={};
+  showScr('scr-auth'); toast('Sampai jumpa! 👋','ok');
+}
 
 function doReset() {
   if (!confirm('Reset semua data? Semua akun akan terhapus dan kamu mulai dari setup awal.')) return;
