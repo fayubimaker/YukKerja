@@ -578,7 +578,7 @@ const SUPA_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsI
 // ═══════════════════════════════════════════
 // API LAYER — Supabase REST API
 // ═══════════════════════════════════════════
-const SB_HEADERS = {
+const SH = {
   'Content-Type': 'application/json',
   'apikey': SUPA_KEY,
   'Authorization': 'Bearer ' + SUPA_KEY,
@@ -588,7 +588,7 @@ const SB_HEADERS = {
 // GET rows dari tabel
 async function sbGet(table, query='') {
   try {
-    const r = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+query, {headers: SB_HEADERS});
+    const r = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+query, {headers: SH});
     const d = await r.json();
     return Array.isArray(d) ? d : [];
   } catch(e) { return []; }
@@ -597,13 +597,15 @@ async function sbGet(table, query='') {
 // INSERT row
 async function sbInsert(table, data) {
   try {
-    const r = await fetch(SUPA_URL+'/rest/v1/'+table, {
-      method: 'POST', headers: SB_HEADERS,
-      body: JSON.stringify(data)
-    });
-    const d = await r.json();
-    return {ok: r.ok, data: d};
-  } catch(e) { return {ok:false, error:e.toString()}; }
+    const r = await fetch(SUPA_URL+'/rest/v1/'+table, {method:'POST', headers:SH, body:JSON.stringify(data)});
+    const txt = await r.text();
+    if (!r.ok) {
+      console.error('sbInsert error on '+table+':', txt);
+      try { const err=JSON.parse(txt); return {ok:false, error:err.message||err.hint||txt}; }
+      catch { return {ok:false, error:txt}; }
+    }
+    return {ok:true};
+  } catch(e) { console.error('sbInsert error:', e); return {ok:false, error:e.toString()}; }
 }
 
 // UPDATE row
@@ -611,7 +613,7 @@ async function sbUpdate(table, match, data) {
   try {
     const q = Object.entries(match).map(([k,v])=>k+'=eq.'+encodeURIComponent(v)).join('&');
     const r = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+q, {
-      method: 'PATCH', headers: SB_HEADERS,
+      method: 'PATCH', headers: SH,
       body: JSON.stringify(data)
     });
     return {ok: r.ok};
@@ -623,7 +625,7 @@ async function sbDelete(table, match) {
   try {
     const q = Object.entries(match).map(([k,v])=>k+'=eq.'+encodeURIComponent(v)).join('&');
     const r = await fetch(SUPA_URL+'/rest/v1/'+table+'?'+q, {
-      method: 'DELETE', headers: SB_HEADERS
+      method: 'DELETE', headers: SH
     });
     return {ok: r.ok};
   } catch(e) { return {ok:false, error:e.toString()}; }
@@ -634,7 +636,7 @@ async function sbUpsert(table, data) {
   try {
     const r = await fetch(SUPA_URL+'/rest/v1/'+table, {
       method: 'POST',
-      headers: {...SB_HEADERS, 'Prefer': 'resolution=merge-duplicates,return=representation'},
+      headers: {...SH, 'Prefer': 'resolution=merge-duplicates,return=representation'},
       body: JSON.stringify(data)
     });
     return {ok: r.ok};
@@ -735,18 +737,20 @@ function goAuth() { showScr('scr-auth'); }
 async function init() {
   showLoading('Memuat YukKerja...');
   try {
-    // Cek ke Supabase apakah sudah ada Super Manager
-    const users = await sbGet('users', 'role=eq.superManager&status=eq.active');
+    const allUsers = await sbGet('users', 'select=role,status&limit=500');
+    const hasSM = allUsers.some(u => u.role === 'superManager' && u.status === 'active');
     hideLoading();
-    if (users.length > 0) {
-      showScr('scr-auth'); // Sudah ada SM → langsung login
+    if (hasSM) {
+      showScr('scr-auth');
     } else {
-      showScr('scr-setup'); // Belum ada SM → setup dulu
+      showScr('scr-setup');
     }
   } catch(e) {
     hideLoading();
-    toast('Tidak bisa konek ke server ❌','er');
+    console.error('Init error:', e);
+    // Kalau gagal konek, tampilkan setup (safer)
     showScr('scr-setup');
+    toast('Tidak bisa konek ke Supabase ❌','er');
   }
 }
 
@@ -781,7 +785,11 @@ async function doSetup() {
   showLoading('Membuat akun Super Manager...');
   const res = await sbInsert('users', userData);
   hideLoading();
-  if (!res.ok) { toast('Gagal membuat akun ❌ Coba lagi','er'); return; }
+  if (!res.ok) {
+    toast('Gagal: '+res.error,'er');
+    console.error('Setup error:', res.error);
+    return;
+  }
 
   toast('Akun Super Manager berhasil dibuat! 🎉','ok');
   ME = userData;
@@ -824,30 +832,35 @@ async function doLogin() {
   const lid = $('li').value.trim().toLowerCase();
   const pw  = $('lp').value;
   if (!lid||!pw) { toast('Isi username/email dan password 📝','wa'); return; }
-
   showLoading('Memeriksa akun...');
-  // Cari user by email atau username di Supabase
-  let users = await sbGet('users', 'email=eq.'+encodeURIComponent(lid)+'&status=eq.active');
-  if (!users.length) {
-    users = await sbGet('users', 'uname=eq.'+encodeURIComponent(lid)+'&status=eq.active');
+  try {
+    // Ambil semua user lalu filter di client (hindari masalah encoding URL)
+    const allUsers = await sbGet('users', 'select=*&limit=500');
+    const user = allUsers.find(u =>
+      (u.email && u.email.toLowerCase() === lid) ||
+      (u.uname && u.uname.toLowerCase() === lid)
+    );
+    hideLoading();
+    if (!user) {
+      const allPend = await sbGet('pending', 'select=*&limit=500');
+      const isPend = allPend.find(u =>
+        (u.email && u.email.toLowerCase() === lid) ||
+        (u.uname && u.uname.toLowerCase() === lid)
+      );
+      if (isPend) { toast('Akunmu masih menunggu persetujuan ⏳','wa'); return; }
+      toast('Akun tidak ditemukan 🔍','er'); return;
+    }
+    if (user.status !== 'active') { toast('Akun belum aktif ⏳','wa'); return; }
+    if (H(pw) !== user.pw) { toast('Password salah ❌','er'); return; }
+    ME = user;
+    await loadAllData();
+    showScr('app'); setupApp();
+    toast('Selamat datang, @'+ME.uname+'! 🎉','ok');
+  } catch(e) {
+    hideLoading();
+    toast('Gagal konek ke server ❌','er');
+    console.error('Login error:', e);
   }
-  hideLoading();
-
-  if (!users.length) {
-    // Cek apakah ada di pending
-    const pend = await sbGet('pending', 'email=eq.'+encodeURIComponent(lid));
-    if (pend.length) { toast('Akunmu masih menunggu persetujuan ⏳','wa'); return; }
-    toast('Akun tidak ditemukan 🔍','er'); return;
-  }
-
-  const user = users[0];
-  if (user.status !== 'active') { toast('Akun belum aktif ⏳','wa'); return; }
-  if (H(pw) !== user.pw) { toast('Password salah ❌','er'); return; }
-
-  ME = user;
-  await loadAllData();
-  showScr('app'); setupApp();
-  toast('Selamat datang, @'+ME.uname+'! 🎉','ok');
 }
 
 async function loadAllData() {
