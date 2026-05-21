@@ -687,52 +687,39 @@ function goAuth() { showScr('scr-auth'); }
 // INIT
 // ═══════════════════════════════════════════
 async function init() {
-  // Cek localStorage dulu — kalau sudah pernah setup SM, langsung ke login
-  const smDone = localStorage.getItem('yk26_sm_setup');
-  if (smDone === 'done') {
-    // Sudah ada SM — tampilkan login langsung
-    showScr('scr-auth');
-    return;
-  }
-
-  // Belum pernah setup — cek ke server (GAS/Supabase) atau localStorage
-  if (GAS_URL === 'PASTE_WEB_APP_URL_DI_SINI') {
-    OFFLINE = true;
-    load();
-    const hasSM = Object.values(U).some(u => u.role === 'superManager' && u.status === 'active');
-    if (hasSM) {
-      localStorage.setItem('yk26_sm_setup', 'done');
-      showScr('scr-auth');
-    } else {
-      showScr('scr-setup');
-    }
-    return;
-  }
-
-  showLoading('Menghubungkan ke server...');
+  showLoading('Memuat YukKerja...');
   try {
+    // Selalu cek ke Google Sheets apakah sudah ada Super Manager
     const ping = await api('ping');
-    if (!ping.ok) throw new Error('Server tidak merespon');
+    if (!ping.ok) throw new Error('Tidak bisa konek ke server');
+
+    // Pastikan sheet sudah ada
     await api('init');
+
+    // Cek Super Manager di Google Sheets
     const users = await api('getUsers');
-    const hasSM = Array.isArray(users) && users.some(u => u.role === 'superManager' && u.status === 'active');
+    const hasSM = Array.isArray(users) && users.some(u =>
+      u.role === 'superManager' && u.status === 'active'
+    );
     hideLoading();
     if (hasSM) {
-      localStorage.setItem('yk26_sm_setup', 'done');
-      showScr('scr-auth');
+      showScr('scr-auth'); // Sudah ada SM → langsung login
     } else {
-      showScr('scr-setup');
+      showScr('scr-setup'); // Belum ada SM → setup dulu
     }
   } catch(e) {
     hideLoading();
+    // Kalau gagal konek ke server → fallback ke localStorage
     OFFLINE = true;
     load();
-    const hasSM = Object.values(U).some(u => u.role === 'superManager' && u.status === 'active');
+    const hasSM = Object.values(U).some(u =>
+      u.role === 'superManager' && u.status === 'active'
+    );
     if (hasSM) {
-      localStorage.setItem('yk26_sm_setup', 'done');
       showScr('scr-auth');
     } else {
       showScr('scr-setup');
+      toast('Tidak bisa konek ke server. Mode offline.','wa');
     }
   }
 }
@@ -763,13 +750,28 @@ async function doSetup() {
   if (!vpw(pw)) { toast('Password harus min 8 karakter, huruf besar, angka & simbol 🔒','er'); return; }
   if (pw !== pw2) { toast('Password tidak cocok ❌','er'); return; }
   const uname = pan[0].toUpperCase() + pan.slice(1).toLowerCase() + 'SM';
-  const user = { id:email, nama:sx(nama), pan:sx(pan), email, hp, div:'SM', uname, role:'superManager', pw:H(pw), status:'active', tgl:td() };
-  U[email] = user;
-  NOTIF = [{ msg:'👑 Akun Super Manager berhasil dibuat! Selamat datang 🎉', unread:true, tgl:'Baru saja' }];
-  save();
-  localStorage.setItem('yk26_sm_setup', 'done');
+  const userData = { id:email, nama:sx(nama), pan:sx(pan), email, hp, div:'SM', uname, role:'superManager', pw:H(pw), status:'active', tgl:td() };
+
+  showLoading('Membuat akun Super Manager...');
+  try {
+    // Simpan ke Google Sheets
+    const res = await apiPost('setupSM', userData);
+    hideLoading();
+    if (!res.ok) {
+      toast(res.msg || 'Gagal menyimpan ke server ❌','er');
+      return;
+    }
+  } catch(e) {
+    hideLoading();
+    // Fallback ke localStorage kalau server tidak bisa diakses
+    OFFLINE = true;
+    U[email] = userData;
+    save();
+    toast('Server tidak bisa diakses, data disimpan lokal ⚠️','wa');
+  }
+
   toast('Akun Super Manager berhasil dibuat! 🎉','ok');
-  ME = user;
+  ME = userData;
   showScr('app');
   setupApp();
 }
