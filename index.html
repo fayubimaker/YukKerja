@@ -687,33 +687,53 @@ function goAuth() { showScr('scr-auth'); }
 // INIT
 // ═══════════════════════════════════════════
 async function init() {
-  // Cek koneksi ke GAS
+  // Cek localStorage dulu — kalau sudah pernah setup SM, langsung ke login
+  const smDone = localStorage.getItem('yk26_sm_setup');
+  if (smDone === 'done') {
+    // Sudah ada SM — tampilkan login langsung
+    showScr('scr-auth');
+    return;
+  }
+
+  // Belum pernah setup — cek ke server (GAS/Supabase) atau localStorage
   if (GAS_URL === 'PASTE_WEB_APP_URL_DI_SINI') {
-    // Mode offline: pakai localStorage
     OFFLINE = true;
     load();
     const hasSM = Object.values(U).some(u => u.role === 'superManager' && u.status === 'active');
-    if (!hasSM) showScr('scr-setup');
+    if (hasSM) {
+      localStorage.setItem('yk26_sm_setup', 'done');
+      showScr('scr-auth');
+    } else {
+      showScr('scr-setup');
+    }
     return;
   }
+
   showLoading('Menghubungkan ke server...');
   try {
-    // Init sheets jika belum ada
     const ping = await api('ping');
     if (!ping.ok) throw new Error('Server tidak merespon');
     await api('init');
-    // Cek apakah sudah ada superManager
     const users = await api('getUsers');
     const hasSM = Array.isArray(users) && users.some(u => u.role === 'superManager' && u.status === 'active');
-    if (!hasSM) { hideLoading(); showScr('scr-setup'); return; }
     hideLoading();
+    if (hasSM) {
+      localStorage.setItem('yk26_sm_setup', 'done');
+      showScr('scr-auth');
+    } else {
+      showScr('scr-setup');
+    }
   } catch(e) {
     hideLoading();
-    toast('Gagal konek ke server. Mode offline aktif.','wa');
     OFFLINE = true;
     load();
     const hasSM = Object.values(U).some(u => u.role === 'superManager' && u.status === 'active');
-    if (!hasSM) showScr('scr-setup');
+    if (hasSM) {
+      localStorage.setItem('yk26_sm_setup', 'done');
+      showScr('scr-auth');
+    } else {
+      showScr('scr-setup');
+    }
   }
 }
 
@@ -747,6 +767,7 @@ async function doSetup() {
   U[email] = user;
   NOTIF = [{ msg:'👑 Akun Super Manager berhasil dibuat! Selamat datang 🎉', unread:true, tgl:'Baru saja' }];
   save();
+  localStorage.setItem('yk26_sm_setup', 'done');
   toast('Akun Super Manager berhasil dibuat! 🎉','ok');
   ME = user;
   showScr('app');
@@ -867,7 +888,7 @@ function doLogout() { if(OFFLINE)save(); ME=null; cind=false; U={}; PEND=[]; PJ=
 
 function doReset() {
   if (!confirm('Reset semua data? Semua akun akan terhapus dan kamu mulai dari setup awal.')) return;
-  Object.keys(localStorage).filter(k=>k.startsWith(K)).forEach(k=>localStorage.removeItem(k));
+  Object.keys(localStorage).filter(k=>k.startsWith(K)||k==='yk26_sm_setup').forEach(k=>localStorage.removeItem(k));
   U={}; PEND=[]; PJ=[]; CUTI=[]; ABS=[]; NOTIF=[]; CMDS=[]; KASH=[]; KACC={};
   showScr('scr-setup');
   toast('Data direset. Buat akun Super Manager baru.','ok');
