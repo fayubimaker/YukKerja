@@ -370,18 +370,37 @@ tr:hover td{background:var(--s2)}
           </select>
         </div>
         <div class="fg"><label class="fl">Lokasi</label><input class="fi" id="alok" placeholder="Kantor Pusat..."></div>
-        <div class="fg"><label class="fl">📸 Selfie</label>
-          <div style="background:var(--s2);border:2px dashed var(--b2);border-radius:var(--rl2);padding:24px;text-align:center;cursor:pointer" onclick="document.getElementById('sf').click()">
-            <img id="simg" style="display:none;max-width:160px;height:120px;object-fit:cover;border-radius:8px;margin:0 auto">
-            <div id="sph" style="font-size:26px;margin-bottom:5px">📷</div>
-            <div id="sht" style="font-size:12px;color:var(--t3)">Klik untuk selfie 🤳</div>
-          </div>
-          <input type="file" id="sf" accept="image/*" capture="user" style="display:none" onchange="pSelfie(this)">
-        </div>
+
       </div></div>
       <div class="card"><div class="ch"><span class="ct">📅 Riwayat</span></div><div class="cb tw">
-        <table><thead><tr><th>Tgl</th><th>In</th><th>Out</th><th>Tipe</th><th>Status</th></tr></thead><tbody id="ath"></tbody></table>
+        <table><thead><tr><th>Tanggal</th><th>Clock In</th><th>Clock Out</th><th>Tipe</th><th>Lokasi</th><th>Status</th></tr></thead><tbody id="ath"></tbody></table>
       </div></div>
+    </div>
+  </div>
+
+  <!-- REKAP ABSENSI (Manager & Supervisor) -->
+  <div class="pg" id="pg-rekap_absensi">
+    <div class="ptit">📊 Rekap Absensi Tim</div>
+    <div class="psub">Pantau kehadiran dan selfie semua karyawan</div>
+    <div style="display:flex;gap:10px;margin-bottom:16px;flex-wrap:wrap;align-items:flex-end">
+      <div class="fg" style="margin:0">
+        <label class="fl">Filter Tanggal</label>
+        <input class="fi" type="date" id="rab-tgl" style="width:auto" onchange="rRekapAbs()">
+      </div>
+      <div class="fg" style="margin:0">
+        <label class="fl">Filter Karyawan</label>
+        <input class="fi" id="rab-search" placeholder="Cari nama..." style="width:180px" oninput="rRekapAbs()">
+      </div>
+      <button class="btn bp sm" onclick="rRekapAbs()">🔍 Cari</button>
+    </div>
+    <div class="card">
+      <div class="ch"><span class="ct">📋 Data Absensi</span><span id="rab-count" class="bdg bin">0 data</span></div>
+      <div class="cb tw">
+        <table>
+          <thead><tr><th>Nama</th><th>Username</th><th>Tanggal</th><th>Clock In</th><th>Clock Out</th><th>Tipe</th><th>Lokasi</th><th>Status</th></tr></thead>
+          <tbody id="rab-tbody"></tbody>
+        </table>
+      </div>
     </div>
   </div>
 
@@ -414,6 +433,17 @@ tr:hover td{background:var(--s2)}
           <div class="fg"><label class="fl">Klasifikasi</label><select class="fsl" id="pjk"><option value="normal">📌 Normal</option><option value="important">⭐ Important</option><option value="urgent">🔴 Urgent</option></select></div>
         </div>
         <div class="fg"><label class="fl">Keperluan</label><textarea class="fta" id="pjd" placeholder="Jelaskan keperluan..."></textarea></div>
+        <div class="fg"><label class="fl">Tujuan Pembayaran</label>
+          <select class="fsl" id="pjtipe" onchange="togTujuan()">
+            <option value="transfer">🏦 Transfer Bank</option>
+            <option value="cash">💵 Cash</option>
+            <option value="qris">📱 QRIS</option>
+          </select>
+        </div>
+        <div class="fg" id="tujuan-wrap">
+          <label class="fl" id="tujuan-label">Tujuan Transfer (Nama Bank - No. Rekening - Nama)</label>
+          <input class="fi" id="pjtujuan" placeholder="Contoh: BCA - 1234567890 - Budi Santoso">
+        </div>
         <div class="fg"><label class="fl">Divisi</label><select class="fsl" id="pjdv"><option value='FAT'>FAT</option><option value='MKT'>Marketing</option><option value='STR'>Store</option><option value='PD'>Produk & Development</option></select></div>
         <div class="fg">
           <label class="fl" style="display:flex;justify-content:space-between"><span>🛒 Item</span><span id="pjtot" style="color:var(--r2);font-weight:700">Total: Rp 0</span></label>
@@ -473,13 +503,16 @@ tr:hover td{background:var(--s2)}
       <div class="card"><div class="ch"><span class="ct">👥 Semua Pengguna</span></div><div class="cb tw"><table><thead><tr><th>Nama</th><th>Username</th><th>Email</th><th>Divisi</th><th>Role</th><th>Aksi</th></tr></thead><tbody id="allt"></tbody></table></div></div>
     </div>
     <div id="sd-ab" style="display:none">
-      <div class="card"><div class="ch"><span class="ct">🕐 Rekap Absensi</span></div><div class="cb tw">
-        <table><thead><tr><th>Nama</th><th>Username</th><th>Divisi</th><th>🏢</th><th>🏠</th><th>🎪</th><th>❌</th></tr></thead>
-        <tbody>
-          <tr><td>Budi Santoso</td><td><span class="uc">@BudiOPS</span></td><td>Operasional</td><td>18</td><td>3</td><td>1</td><td><span class="bdg bok">0</span></td></tr>
-          <tr><td>Siti Rahayu</td><td><span class="uc">@SitiFIN</span></td><td>Finance</td><td>20</td><td>1</td><td>0</td><td><span class="bdg bok">0</span></td></tr>
-          <tr><td>Deni Kurniawan</td><td><span class="uc">@DeniMKT</span></td><td>Marketing</td><td>15</td><td>4</td><td>2</td><td><span class="bdg bwa">1</span></td></tr>
-        </tbody></table>
+      <div class="card"><div class="ch"><span class="ct">🕐 Rekap Absensi Semua Karyawan</span></div><div class="cb">
+        <div style="display:flex;gap:10px;margin-bottom:14px;flex-wrap:wrap;align-items:flex-end">
+          <div class="fg" style="margin:0"><label class="fl">Filter Tanggal</label><input class="fi" type="date" id="sdab-tgl" style="width:auto" onchange="rSDAbs()"></div>
+          <div class="fg" style="margin:0"><label class="fl">Cari Karyawan</label><input class="fi" id="sdab-search" placeholder="Nama / username..." style="width:180px" oninput="rSDAbs()"></div>
+          <button class="btn bp sm" onclick="rSDAbs()">🔍 Cari</button>
+        </div>
+        <div class="tw"><table>
+          <thead><tr><th>Nama</th><th>Username</th><th>Tanggal</th><th>Clock In</th><th>Clock Out</th><th>Tipe</th><th>Lokasi</th><th>Status</th></tr></thead>
+          <tbody id="sdab-tbody"><tr><td colspan="9" style="text-align:center;color:var(--t3);padding:20px">Klik Cari untuk load data 🔍</td></tr></tbody>
+        </table></div>
       </div></div>
     </div>
     <div id="sd-cu" style="display:none">
@@ -563,7 +596,7 @@ tr:hover td{background:var(--s2)}
 <div class="mo" id="m-role"><div class="mdl" style="max-width:380px">
   <div class="mh"><div class="mt">⚙️ Ubah Role</div><button class="mc" onclick="closeM('m-role')">✕</button></div>
   <div class="mb"><div id="ri" style="background:var(--s2);border-radius:var(--rr);padding:11px;margin-bottom:13px;font-size:13px"></div>
-    <div class="fg"><label class="fl">Role Baru</label><select class="fsl" id="rsel"><option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option></select></div>
+    <div class="fg"><label class="fl">Role Baru</label><select class="fsl" id="rsel"><option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option><option value="kasir_finance">💳 Kasir Finance</option></select></div>
   </div>
   <div class="mf"><button class="btn bs" onclick="closeM('m-role')">Batal</button><button class="btn bp" onclick="saveRole()">💾 Simpan</button></div>
 </div></div>
@@ -699,8 +732,8 @@ let U={}, PEND=[], PJ=[], CUTI=[], ABS=[], NOTIF=[], CMDS=[], KASH=[], KACC={};
 let ME=null, tolakId=null, bayarId=null, roleUid=null, iCnt=0, cind=false;
 
 const DM = {FAT:'FAT',MKT:'Marketing',STR:'Store',PD:'Produk & Development'};
-const EM = {superManager:'👑',manager:'🎯',supervisor:'🔍',staff:'🙋',kasir:'💰'};
-const RL = {superManager:'Super Manager',manager:'Manager',supervisor:'Supervisor',staff:'Staff',kasir:'Kasir'};
+const EM = {superManager:'👑',manager:'🎯',supervisor:'🔍',staff:'🙋',kasir:'💰',kasir_finance:'💳'};
+const RL = {superManager:'Super Manager',manager:'Manager',supervisor:'Supervisor',staff:'Staff',kasir:'Kasir',kasir_finance:'Kasir Finance'};
 
 function load() {
   U    = LS('u',{});   PEND = LS('pend',[]);
@@ -730,6 +763,25 @@ function showScr(id) {
   });
 }
 function goAuth() { showScr('scr-auth'); }
+
+// ═══════════════════════════════════════════
+// TUJUAN PEMBAYARAN
+// ═══════════════════════════════════════════
+function togTujuan() {
+  const tipe = $('pjtipe').value;
+  const lbl = $('tujuan-label');
+  const inp = $('pjtujuan');
+  if (tipe === 'transfer') {
+    if(lbl) lbl.textContent = 'Tujuan Transfer (Nama Bank - No. Rekening - Nama)';
+    if(inp) inp.placeholder = 'Contoh: BCA - 1234567890 - Budi Santoso';
+  } else if (tipe === 'cash') {
+    if(lbl) lbl.textContent = 'Cash Kepada Siapa';
+    if(inp) inp.placeholder = 'Contoh: Budi Santoso (Staff Operasional)';
+  } else {
+    if(lbl) lbl.textContent = 'Nama / Keterangan QRIS';
+    if(inp) inp.placeholder = 'Contoh: QRIS Toko ATK';
+  }
+}
 
 // ═══════════════════════════════════════════
 // INIT
@@ -940,11 +992,12 @@ function setupApp() {
 }
 
 const NAVCFG = {
-  superManager:[['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir']],
-  manager:     [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['approval','✅ Persetujuan']],
-  supervisor:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['approval','✅ Persetujuan']],
-  staff:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan']],
-  kasir:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['kasir','💰 Kasir']],
+  superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir']],
+  manager:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['approval','✅ Persetujuan']],
+  supervisor:    [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['approval','✅ Persetujuan']],
+  staff:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan']],
+  kasir_finance: [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['kasir','💰 Kasir']],
+  kasir:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['kasir','💰 Kasir']],
 };
 function buildNav() {
   const tabs = NAVCFG[ME.role]||NAVCFG.staff;
@@ -961,7 +1014,8 @@ function goPage(id) {
   if(id==='approval')  rAppr();
   if(id==='superdash') rSD();
   if(id==='kasir')     rKasir();
-  if(id==='cuti')      rCutiList();
+  if(id==='cuti')        rCutiList();
+  if(id==='rekap_absensi') rRekapAbs();
 }
 
 // ═══════════════════════════════════════════
@@ -988,7 +1042,7 @@ async function doCin(){
   const tipe=$('atip').value; cind=true;
   const now=new Date();
   const jamIn=now.toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'});
-  const data={id:'A'+Date.now(),uname:ME.uname,tgl:td(),jam_in:jamIn,jam_out:'-',tipe,status:'Hadir',lokasi:$('alok').value||''};
+  const data={id:'A'+Date.now(),uname:ME.uname,nama:ME.nama,tgl:td(),jam_in:jamIn,jam_out:'-',tipe,status:'Hadir',lokasi:$('alok').value||''};
   await sbInsert('absensi',data);
   ABS.unshift({...data,in:data.jam_in,out:data.jam_out});
   toast('Clock In ☀️ '+jamIn,'ok'); addNotif('☀️ Clock In sukses jam '+jamIn);
@@ -1004,11 +1058,27 @@ async function doCout(){
   }
   cind=false; toast('Clock Out 🌙 Sampai besok!','ok'); rAbs();
 }
+function showSelfie(src) {
+  let ov=document.getElementById('selfie-ov');
+  if(!ov){ov=document.createElement('div');ov.id='selfie-ov';ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:12px';ov.onclick=()=>ov.style.display='none';document.body.appendChild(ov);}
+  ov.innerHTML=`<img src="${src}" style="max-width:85vw;max-height:80vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,.5)"><div style="color:rgba(255,255,255,.5);font-size:12px">Klik untuk tutup</div>`;
+  ov.style.display='flex';
+}
+
 const tbdg=t=>({office:'<span class="bdg bin">🏢</span>',wfh:'<span class="bdg bne">🏠</span>',event:'<span class="bdg bwa">🎪</span>',dinas:'<span class="bdg bgo">✈️</span>'}[t]||t);
 function rAbs() {
   const tb=$('ath'); if(!tb)return;
   const mine=ABS.filter(a=>!a.uname||a.uname===ME.uname);
-  tb.innerHTML=mine.slice(0,10).map(a=>`<tr><td>${a.tgl}</td><td><b>${a.in}</b></td><td>${a.out}</td><td>${tbdg(a.tipe)}</td><td><span class="bdg bok">${a.status}</span></td></tr>`).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--t3)">Belum ada 📭</td></tr>';
+  tb.innerHTML=mine.slice(0,30).map(a=>
+    `<tr>
+      <td>${a.tgl}</td>
+      <td><b>${a.in||a.jam_in||'-'}</b></td>
+      <td>${a.out||a.jam_out||'-'}</td>
+      <td>${tbdg(a.tipe)}</td>
+      <td style="font-size:12px">${a.lokasi||'-'}</td>
+      <td><span class="bdg bok">${a.status||'Hadir'}</span></td>
+    </tr>`
+  ).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--t3);padding:20px">Belum ada data 📭</td></tr>';
 }
 function pSelfie(inp) {
   const f=inp.files[0]; if(!f)return;
@@ -1065,7 +1135,9 @@ async function subPJ(){
   document.querySelectorAll('[id^="in-"]').forEach(e=>{const id=e.id.replace('in-','');const j=parseFloat($('ij-'+id)?.value)||0;if(e.value)items.push({n:sx(e.value),j});});
   if(!items.length){toast('Tambah minimal 1 item 🛒','wa');return;}
   const total=items.reduce((s,i)=>s+i.j,0);
-  const data={id:'PJ'+Date.now(),nama:ME.nama,uname:ME.uname,uid:ME.id,jenis,desk:sx(desk),div,items:JSON.stringify(items),total,klas,status:'pending',tgl:td()};
+  const tipe_bayar = $('pjtipe') ? $('pjtipe').value : 'transfer';
+  const tujuan = $('pjtujuan') ? sx($('pjtujuan').value.trim()) : '';
+  const data={id:'PJ'+Date.now(),nama:ME.nama,uname:ME.uname,uid:ME.id,jenis,desk:sx(desk),div,items:JSON.stringify(items),total,klas,status:'pending',tgl:td(),tipe_bayar,tujuan};
   showLoading('Mengirim pengajuan...');
   const res=await sbInsert('pengajuan',data);
   hideLoading();
@@ -1086,6 +1158,7 @@ function rPJ() {
         ${sbdg(p.status)}</div>
       <div style="font-weight:600;margin-bottom:3px">${p.desk}</div>
       <div style="font-size:12px;color:var(--t3)">${p.div} · ${p.tgl} · ${rp(p.total)}</div>
+      ${p.tujuan?`<div style="font-size:12px;color:var(--t3);margin-top:2px">💳 ${p.tipe_bayar==='cash'?'Cash ke':'Transfer ke'}: <b>${p.tujuan}</b></div>`:''}
       <div style="margin-top:8px"><button class="btn bs sm" onclick="showDet('${p.id}')">👁️ Detail</button></div>
     </div>`).join('');
 }
@@ -1095,31 +1168,71 @@ function rPJ() {
 // ═══════════════════════════════════════════
 function rAppr() {
   const pl=$('ap-pl'); if(!pl)return;
-  const pend=PJ.filter(p=>p.status==='pending');
-  if(!pend.length){pl.innerHTML='<div class="emp"><span class="e">🎉</span><p>Tidak ada yang perlu disetujui</p></div>';return;}
-  pl.innerHTML=pend.map(p=>`
-    <div class="apc ${p.klas}">
-      <div class="apm"><b>${p.id}</b><span class="bdg bne">👤 ${sx(p.nama)}</span><span class="uc">@${sx(p.uname)}</span>
-        ${p.klas==='urgent'?'<span class="bdg ber">🔴</span>':p.klas==='important'?'<span class="bdg bgo">⭐</span>':''}</div>
-      <div style="font-weight:600;margin-bottom:3px">${p.desk}</div>
-      <div style="font-size:12px;color:var(--t3)">${p.div} · ${p.tgl} · <b style="color:var(--t)">${rp(p.total)}</b></div>
-      <div class="apa">
-        <button class="btn bg sm" onclick="apvPJ('${p.id}')">✅ Setujui</button>
-        <button class="btn bd sm" onclick="opTolak('${p.id}')">❌ Tolak</button>
-        <button class="btn bs sm" onclick="showDet('${p.id}')">👁️ Detail</button>
-      </div>
-    </div>`).join('');
+
+  // Filter berdasarkan role
+  let canApprove = [];
+  if (ME.role === 'supervisor') {
+    canApprove = PJ.filter(p => p.status === 'pending');
+  } else if (ME.role === 'manager') {
+    canApprove = PJ.filter(p => p.status === 'approved_spv');
+  }
+  // superManager approvenya di Super Dashboard
+
+  if(!canApprove.length){
+    pl.innerHTML='<div class="emp"><span class="e">🎉</span><p>Tidak ada yang perlu disetujui</p></div>';
+  } else {
+    pl.innerHTML=canApprove.map(p=>`
+      <div class="apc ${p.klas}">
+        <div class="apm"><b>${p.id}</b>
+          <span class="bdg bne">👤 ${sx(p.nama)}</span><span class="uc">@${sx(p.uname)}</span>
+          ${p.klas==='urgent'?'<span class="bdg ber">🔴 Urgent</span>':p.klas==='important'?'<span class="bdg bgo">⭐</span>':''}
+          ${sbdg(p.status)}
+        </div>
+        <div style="font-weight:600;margin-bottom:3px">${p.desk}</div>
+        <div style="font-size:12px;color:var(--t3)">${p.div} · ${p.tgl} · <b style="color:var(--t)">${rp(p.total)}</b></div>
+        ${p.tujuan?`<div style="font-size:12px;color:var(--t3);margin-top:3px">💳 ${p.tipe_bayar==='cash'?'Cash ke':'Transfer ke'}: <b>${p.tujuan}</b></div>`:''}
+        <div class="apa">
+          <button class="btn bg sm" onclick="apvPJ('${p.id}')">✅ ${ME.role==='supervisor'?'Teruskan ke Manager':'Teruskan ke Super Manager'}</button>
+          <button class="btn bd sm" onclick="opTolak('${p.id}')">❌ Tolak</button>
+          <button class="btn bs sm" onclick="showDet('${p.id}')">👁️ Detail</button>
+        </div>
+      </div>`).join('');
+  }
+
   const hl=$('ap-hl');
-  const done=PJ.filter(p=>p.status!=='pending');
-  hl.innerHTML=done.length?done.map(p=>`<div class="apc"><div class="apm"><b>${p.id}</b><span class="bdg bne">👤 ${sx(p.nama)}</span><span class="uc">@${sx(p.uname)}</span>${sbdg(p.status)}</div><div style="font-size:13px;color:var(--t2)">${p.desk} · ${rp(p.total)}</div></div>`).join(''):'<div class="emp"><span class="e">📜</span><p>Belum ada riwayat</p></div>';
+  // Riwayat = semua yang sudah pernah lewat di level ini
+  let history = [];
+  if (ME.role === 'supervisor') {
+    history = PJ.filter(p => ['approved_spv','approved_mgr','approved','rejected','paid'].includes(p.status));
+  } else if (ME.role === 'manager') {
+    history = PJ.filter(p => ['approved_mgr','approved','rejected','paid'].includes(p.status));
+  }
+  hl.innerHTML=history.length?history.map(p=>
+    `<div class="apc"><div class="apm"><b>${p.id}</b><span class="bdg bne">👤 ${sx(p.nama)}</span><span class="uc">@${sx(p.uname)}</span>${sbdg(p.status)}</div>
+    <div style="font-size:13px;color:var(--t2)">${p.desk} · ${rp(p.total)}</div></div>`
+  ).join(''):'<div class="emp"><span class="e">📜</span><p>Belum ada riwayat</p></div>';
 }
 async function apvPJ(id){
   const p=PJ.find(x=>x.id===id); if(!p)return;
-  await sbUpdate('pengajuan',{id},{status:'approved'});
-  p.status='approved';
-  // Notif ke pemohon
-  await sbInsert('notifikasi',{id:'N'+Date.now(),target:p.uname,msg:'✅ Pengajuan '+id+' ('+p.desk+') disetujui!',unread:true,tgl:td()});
-  toast(id+' disetujui! ✅','ok'); addNotif('✅ '+id+' disetujui');
+  let newStatus = '';
+  let notifMsg = '';
+
+  if (ME.role === 'supervisor') {
+    newStatus = 'approved_spv';
+    notifMsg = '🔍 Pengajuan '+id+' ('+p.desk+') disetujui Supervisor, menunggu Manager.';
+  } else if (ME.role === 'manager') {
+    newStatus = 'approved_mgr';
+    notifMsg = '🎯 Pengajuan '+id+' ('+p.desk+') disetujui Manager, menunggu Super Manager.';
+  } else if (ME.role === 'superManager') {
+    newStatus = 'approved';
+    notifMsg = '✅ Pengajuan '+id+' ('+p.desk+') FINAL disetujui Super Manager!';
+  }
+
+  if (!newStatus) return;
+  await sbUpdate('pengajuan',{id},{status:newStatus});
+  await sbInsert('notifikasi',{id:'N'+Date.now(),target:p.uname,msg:notifMsg,unread:true,tgl:td()});
+  p.status = newStatus;
+  toast(id+' diteruskan! ✅','ok');
   rAppr(); rSD(); rKasir();
 }
 function opTolak(id){tolakId=id;$('tolrs').value='';openM('m-tolak');}
@@ -1164,7 +1277,8 @@ function rSDpj(){
       <td>${p.klas==='urgent'?'<span class="bdg ber">🔴</span>':p.klas==='important'?'<span class="bdg bgo">⭐</span>':'<span class="bdg bne">📌</span>'}</td>
       <td>${sbdg(p.status)}</td>
       <td><div style="display:flex;gap:3px;flex-wrap:wrap">
-        ${p.status==='pending'?`<button class="btn bg xs" onclick="apvPJ('${p.id}')">✅</button><button class="btn bd xs" onclick="opTolak('${p.id}')">❌</button>`:''}
+        ${p.status==='approved_mgr'?`<button class="btn bg xs" onclick="apvPJ('${p.id}')" title="Final Setujui">✅</button><button class="btn bd xs" onclick="opTolak('${p.id}')" title="Tolak">❌</button>`:''}
+        ${p.status==='pending'||p.status==='approved_spv'?`<button class="btn bd xs" onclick="opTolak('${p.id}')" title="Tolak">❌</button>`:''}
         <button class="btn bs xs" onclick="showDet('${p.id}')">👁️</button>
       </div></td>
     </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--t3)">Tidak ada 📭</td></tr>';
@@ -1180,7 +1294,7 @@ function rUsers(){
       </div>
       <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
         <select class="fsl" id="rs-${u.email.replace(/[@.]/g,'_')}" style="padding:4px 8px;font-size:12px;width:auto">
-          <option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option>
+          <option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option><option value="kasir_finance">💳 Kasir Finance</option>
         </select>
         <button class="btn bg sm" onclick="apvU('${u.email}')">✅ Setujui</button>
         <button class="btn bd sm" onclick="rejU('${u.email}')">❌ Tolak</button>
@@ -1253,7 +1367,8 @@ async function rejCuti(id){
 }
 function rKasTab(){
   const tb=$('kast'); if(!tb)return;
-  tb.innerHTML=Object.values(U).filter(u=>u.role!=='superManager').map(u=>`
+  // kasir_finance otomatis dapat akses, tidak perlu toggle
+  tb.innerHTML=Object.values(U).filter(u=>u.role!=='superManager'&&u.role!=='kasir_finance').map(u=>`
     <tr><td><b>${sx(u.nama)}</b></td><td><span class="uc">@${sx(u.uname)}</span></td>
     <td><span class="bdg bne">${RL[u.role]}</span></td>
     <td>${KACC[u.id]?'<span class="bdg bok">✅ Ya</span>':'<span class="bdg ber">❌ Tidak</span>'}</td>
@@ -1328,8 +1443,9 @@ function rKhist(){
 // ═══════════════════════════════════════════
 function showDet(id){
   const p=PJ.find(x=>x.id===id); if(!p)return;
-  const steps=['📤 Diajukan','🔍 Supervisor','🎯 Manager','👑 Super Manager','💰 Kasir'];
-  const si=p.status==='pending'?0:p.status==='approved'?3:p.status==='paid'?4:0;
+  const steps=['📤 Diajukan','🔍 SPV','🎯 Manager','👑 Super Manager','💰 Kasir'];
+  const statusIdx={pending:0,approved_spv:1,approved_mgr:2,approved:3,paid:4,rejected:0};
+  const si = p.status==='rejected'?0:(statusIdx[p.status]||0);
   $('m-det-b').innerHTML=`
     <div class="stp" style="margin-bottom:16px">${steps.map((s,i)=>`<div class="stp .s ${i<si?'dn':i===si?'ac':''}"><div class="sdt ${i<si?'dn':i===si?'ac':'wt'}">${i<si?'✓':i+1}</div><div class="slb">${s}</div></div>`).join('')}</div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-bottom:13px">
@@ -1339,6 +1455,7 @@ function showDet(id){
       <div><div style="font-size:11px;color:var(--t3);font-weight:700;text-transform:uppercase;letter-spacing:.4px;margin-bottom:2px">Jenis</div>${p.jenis==='reimburse'?'🧾 Reimburse':'💵 Dana'}</div>
     </div>
     <div style="background:var(--s2);border-radius:var(--rr);padding:11px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">📝 Keperluan</div>${p.desk}</div>
+    ${p.tujuan?`<div style="background:var(--s2);border-radius:var(--rr);padding:11px;margin-bottom:12px"><div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">${p.tipe_bayar==='cash'?'💵 Cash Kepada':p.tipe_bayar==='qris'?'📱 QRIS':'🏦 Tujuan Transfer'}</div>${p.tujuan}</div>`:''}
     <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:12px">
       <thead><tr><th style="text-align:left;padding:5px;background:var(--s2)">Item</th><th style="text-align:right;padding:5px;background:var(--s2)">Jumlah</th></tr></thead>
       <tbody>${p.items.map(i=>`<tr><td style="padding:6px 5px;border-bottom:1px solid var(--b)">${sx(i.n)}</td><td style="text-align:right;padding:6px 5px;border-bottom:1px solid var(--b)">${rp(i.j)}</td></tr>`).join('')}<tr><td style="padding:6px 5px;font-weight:700">💰 Total</td><td style="text-align:right;padding:6px 5px;font-weight:700;color:var(--r2)">${rp(p.total)}</td></tr></tbody>
@@ -1346,9 +1463,94 @@ function showDet(id){
     ${p.reason?`<div style="background:var(--erb);border-radius:var(--rr);padding:10px;font-size:13px;color:var(--er)">❌ <b>Ditolak:</b> ${sx(p.reason)}</div>`:''}`;
   const ft=$('m-det-f');
   ft.innerHTML=`<button class="btn bs" onclick="closeM('m-det')">Tutup</button>`;
-  if(['superManager','manager','supervisor'].includes(ME.role)&&p.status==='pending')
-    ft.innerHTML+=`<button class="btn bd" onclick="opTolak('${p.id}');closeM('m-det')">❌ Tolak</button><button class="btn bg" onclick="apvPJ('${p.id}');closeM('m-det')">✅ Setujui</button>`;
+  const canAct =
+    (ME.role==='supervisor' && p.status==='pending') ||
+    (ME.role==='manager' && p.status==='approved_spv') ||
+    (ME.role==='superManager' && p.status==='approved_mgr');
+  const canReject = ['superManager','manager','supervisor'].includes(ME.role) &&
+    ['pending','approved_spv','approved_mgr'].includes(p.status);
+  if(canAct) ft.innerHTML+=`<button class="btn bg" onclick="apvPJ('${p.id}');closeM('m-det')">✅ ${ME.role==='superManager'?'Final Setujui':'Teruskan'}</button>`;
+  if(canReject) ft.innerHTML+=`<button class="btn bd" onclick="opTolak('${p.id}');closeM('m-det')">❌ Tolak</button>`;
   openM('m-det');
+}
+
+// ═══════════════════════════════════════════
+// REKAP ABSENSI
+// ═══════════════════════════════════════════
+async function rRekapAbs() {
+  const tgl    = $('rab-tgl')    ? $('rab-tgl').value.trim()    : '';
+  const search = $('rab-search') ? $('rab-search').value.toLowerCase() : '';
+  const tb = $('rab-tbody'); if(!tb) return;
+
+  showLoading('Memuat data absensi...');
+  const allAbs = await sbGet('absensi','order=tgl.desc&limit=500');
+  hideLoading();
+
+  let filtered = allAbs;
+
+  // Manager & Supervisor hanya lihat tim divisinya sendiri
+  if (ME.role === 'manager' || ME.role === 'supervisor') {
+    // Ambil user yang se-divisi
+    const teamUsers = Object.values(U).filter(u => u.div === ME.div).map(u => u.uname);
+    filtered = filtered.filter(a => teamUsers.includes(a.uname) || a.uname === ME.uname);
+  }
+  // superManager lihat semua — tidak perlu filter
+
+  if (tgl) {
+    const tglFormatted = new Date(tgl).toLocaleDateString('id-ID');
+    filtered = filtered.filter(a => a.tgl === tglFormatted);
+  }
+  if (search) {
+    filtered = filtered.filter(a =>
+      (a.nama||'').toLowerCase().includes(search) ||
+      (a.uname||'').toLowerCase().includes(search)
+    );
+  }
+
+  const cnt = $('rab-count'); if(cnt) cnt.textContent = filtered.length + ' data';
+
+  tb.innerHTML = filtered.map(a => `
+    <tr>
+      <td><b>${sx(a.nama||'-')}</b></td>
+      <td><span class="uc">@${sx(a.uname||'-')}</span></td>
+      <td>${a.tgl}</td>
+      <td><b>${a.jam_in||'-'}</b></td>
+      <td>${a.jam_out||'-'}</td>
+      <td>${tbdg(a.tipe)}</td>
+      <td style="font-size:12px">${a.lokasi||'-'}</td>
+      <td><span class="bdg bok">${a.status||'Hadir'}</span></td>
+    </tr>`).join('') ||
+    '<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:20px">Tidak ada data 📭</td></tr>';
+}
+
+// ═══════════════════════════════════════════
+// SD ABSENSI
+// ═══════════════════════════════════════════
+async function rSDAbs() {
+  const tgl    = $('sdab-tgl')    ? $('sdab-tgl').value.trim()    : '';
+  const search = $('sdab-search') ? $('sdab-search').value.toLowerCase() : '';
+  const tb = $('sdab-tbody'); if(!tb) return;
+  showLoading('Memuat absensi...');
+  const allAbs = await sbGet('absensi','order=tgl.desc&limit=1000');
+  hideLoading();
+  let filtered = allAbs;
+  if(tgl) {
+    const tglFormatted = new Date(tgl).toLocaleDateString('id-ID');
+    filtered = filtered.filter(a => a.tgl === tglFormatted);
+  }
+  if(search) filtered=filtered.filter(a=>(a.nama||'').toLowerCase().includes(search)||(a.uname||'').toLowerCase().includes(search));
+  tb.innerHTML=filtered.map(a=>`
+    <tr>
+      <td><b>${sx(a.nama||'-')}</b></td>
+      <td><span class="uc">@${sx(a.uname||'-')}</span></td>
+      <td>${a.tgl}</td>
+      <td><b>${a.jam_in||'-'}</b></td>
+      <td>${a.jam_out||'-'}</td>
+      <td>${tbdg(a.tipe)}</td>
+      <td style="font-size:12px">${a.lokasi||'-'}</td>
+      <td><span class="bdg bok">${a.status||'Hadir'}</span></td>
+    </tr>`).join('')||
+    '<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:20px">Tidak ada data 📭</td></tr>';
 }
 
 // ═══════════════════════════════════════════
@@ -1407,7 +1609,14 @@ document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.
 // ═══════════════════════════════════════════
 // BADGE
 // ═══════════════════════════════════════════
-function sbdg(s){return({pending:'<span class="bdg bwa">⏳ Pending</span>',approved:'<span class="bdg bok">✅ Disetujui</span>',rejected:'<span class="bdg ber">❌ Ditolak</span>',paid:'<span class="bdg bin">💳 Dibayar</span>'}[s]||'<span class="bdg bne">'+s+'</span>');}
+function sbdg(s){return({
+  pending:      '<span class="bdg bwa">⏳ Menunggu</span>',
+  approved_spv: '<span class="bdg" style="background:#EFF8FF;color:#1A6B9A">🔍 Disetujui SPV</span>',
+  approved_mgr: '<span class="bdg" style="background:#F0F4FF;color:#3730A3">🎯 Disetujui Mgr</span>',
+  approved:     '<span class="bdg bok">✅ Final Disetujui</span>',
+  rejected:     '<span class="bdg ber">❌ Ditolak</span>',
+  paid:         '<span class="bdg bin">💳 Dibayar</span>',
+}[s]||'<span class="bdg bne">'+s+'</span>');}
 
 // ═══════════════════════════════════════════
 // START
