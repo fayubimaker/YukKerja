@@ -410,7 +410,7 @@ tr:hover td{background:var(--s2)}
     </div>
     <button class="btn bp" style="margin-bottom:16px" onclick="openM('m-cuti')">🏖️ Ajukan Cuti</button>
     <div class="card"><div class="ch"><span class="ct">📋 Riwayat Cuti</span></div><div class="cb tw">
-      <table><thead><tr><th>Tanggal</th><th>Dari</th><th>Sampai</th><th>Jenis</th><th>Alasan</th><th>Status</th></tr></thead><tbody id="clist"></tbody></table>
+      <table><thead><tr><th>Tanggal</th><th>Dari</th><th>Sampai</th><th>Hari</th><th>Jenis</th><th>Alasan</th><th>Pengajuan</th><th>Balasan</th><th>Status</th></tr></thead><tbody id="clist"></tbody></table>
     </div></div>
   </div>
 
@@ -512,9 +512,31 @@ tr:hover td{background:var(--s2)}
       </div></div>
     </div>
     <div id="sd-cu" style="display:none">
-      <div class="card"><div class="ch"><span class="ct">🏖️ Semua Cuti</span></div><div class="cb tw">
-        <table><thead><tr><th>Nama</th><th>Username</th><th>Dari</th><th>Sampai</th><th>Jenis</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="sdcut"></tbody></table>
-      </div></div>
+      <div class="card">
+        <div class="ch">
+          <span class="ct">📊 Ringkasan Jatah Cuti</span>
+          <div style="display:flex;gap:8px;align-items:center;flex-wrap:wrap">
+            <div style="display:flex;align-items:center;gap:6px">
+              <label style="font-size:12px;color:var(--t2);font-weight:600">Jatah/tahun:</label>
+              <input class="fi" type="number" id="jatah-cuti" value="12" min="1" max="60" style="width:60px;padding:5px 8px;font-size:13px">
+              <span style="font-size:12px;color:var(--t3)">hari</span>
+            </div>
+            <button class="btn bd sm" onclick="konfirmResetCuti()">🔄 Reset Jatah Cuti Semua</button>
+          </div>
+        </div>
+        <div class="cb tw">
+          <table><thead><tr><th>Nama</th><th>Username</th><th>Divisi</th><th>Jatah</th><th>Digunakan</th><th>Sisa</th><th>Pending</th></tr></thead><tbody id="sd-cuti-summary"></tbody></table>
+        </div>
+      </div>
+      <div class="card">
+        <div class="ch">
+          <span class="ct">🏖️ Semua Pengajuan Cuti</span>
+          <select class="fsl" id="sd-cuti-filter" style="padding:5px 9px;font-size:12px;width:auto" onchange="rSDcuti()">
+            <option value="">Semua Status</option><option value="pending">Pending</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option>
+          </select>
+        </div>
+        <div class="cb tw"><table><thead><tr><th>Nama</th><th>Username</th><th>Dari</th><th>Sampai</th><th>Hari</th><th>Jenis</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="sdcut"></tbody></table></div>
+      </div>
     </div>
     <div id="sd-cm" style="display:none">
       <div class="card"><div class="ch"><span class="ct">📢 Kirim Perintah</span></div><div class="cb">
@@ -556,8 +578,28 @@ tr:hover td{background:var(--s2)}
     <div class="fr"><div class="fg"><label class="fl">Dari</label><input class="fi" type="date" id="cfr"></div><div class="fg"><label class="fl">Sampai</label><input class="fi" type="date" id="cto"></div></div>
     <div class="fg"><label class="fl">Jenis</label><select class="fsl" id="cjn"><option>🌴 Cuti Tahunan</option><option>🤒 Cuti Sakit</option><option>👶 Cuti Melahirkan</option><option>💍 Cuti Pernikahan</option><option>🕊️ Cuti Duka</option><option>📝 Izin Khusus</option></select></div>
     <div class="fg"><label class="fl">Alasan</label><textarea class="fta" id="cal" placeholder="Jelaskan alasan..."></textarea></div>
+    <div class="fg">
+      <label class="fl">📎 Upload Dokumen Cuti <span style="color:var(--er)">*</span></label>
+      <div id="cuti-upload-area" style="background:var(--s2);border:2px dashed var(--b2);border-radius:var(--rr);padding:20px;text-align:center;cursor:pointer;transition:all .2s" onclick="document.getElementById('cuti-file').click()" onmouseover="this.style.borderColor='var(--r2)'" onmouseout="this.style.borderColor='var(--b2)'">
+        <div style="font-size:28px;margin-bottom:6px">📎</div>
+        <div style="font-size:13px;color:var(--t2);font-weight:600">Klik untuk upload dokumen</div>
+        <div style="font-size:11px;color:var(--t3);margin-top:4px">PDF, JPG, PNG — Maks. 5MB</div>
+        <div id="cuti-file-preview" style="margin-top:10px;display:none">
+          <div style="background:var(--okb);border:1px solid var(--ok);border-radius:var(--rr);padding:8px 12px;display:inline-flex;align-items:center;gap:7px">
+            <span style="font-size:16px">✅</span>
+            <div>
+              <div id="cuti-file-name" style="font-size:13px;font-weight:600;color:var(--ok)"></div>
+              <div id="cuti-file-size" style="font-size:11px;color:var(--t3)"></div>
+            </div>
+            <button onclick="removeCutiFile(event)" style="background:none;border:none;color:var(--er);cursor:pointer;font-size:16px;padding:0 0 0 4px">✕</button>
+          </div>
+        </div>
+      </div>
+      <input type="file" id="cuti-file" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="prevCutiFile(this)">
+      <div style="font-size:11px;color:var(--t3);margin-top:5px">⚠️ Dokumen wajib diupload untuk pengajuan cuti</div>
+    </div>
   </div>
-  <div class="mf"><button class="btn bs" onclick="closeM('m-cuti')">Batal</button><button class="btn bp" onclick="subCuti()">🚀 Kirim</button></div>
+  <div class="mf"><button class="btn bs" onclick="closeM('m-cuti');resetCutiForm()">Batal</button><button class="btn bp" onclick="subCuti()">🚀 Kirim</button></div>
 </div></div>
 
 <div class="mo" id="m-det"><div class="mdl" style="max-width:580px">
@@ -582,6 +624,42 @@ tr:hover td{background:var(--s2)}
   </div>
   <div class="mf"><button class="btn bs" onclick="closeM('m-bayar')">Batal</button><button class="btn bg" onclick="konfBayar()">✅ Konfirmasi</button></div>
 </div></div>
+
+<!-- Modal Approve Cuti dengan Dokumen -->
+<div class="mo" id="m-apvcuti">
+  <div class="mdl" style="max-width:480px">
+    <div class="mh"><div class="mt">✅ Setujui Pengajuan Cuti</div><button class="mc" onclick="closeM('m-apvcuti')">✕</button></div>
+    <div class="mb">
+      <div id="apvcuti-info" style="background:var(--s2);border-radius:var(--rr);padding:13px;margin-bottom:14px;font-size:13px"></div>
+      <div class="fg">
+        <label class="fl">📎 Upload Surat Persetujuan / Dokumen Balasan</label>
+        <div id="apvcuti-upload-area" style="background:var(--s2);border:2px dashed var(--b2);border-radius:var(--rr);padding:20px;text-align:center;cursor:pointer;transition:all .2s" onclick="document.getElementById('apvcuti-file').click()" onmouseover="this.style.borderColor='var(--ok)'" onmouseout="this.style.borderColor=apvCutiFileData?'var(--ok)':'var(--b2)'">
+          <div style="font-size:26px;margin-bottom:5px">📄</div>
+          <div style="font-size:13px;color:var(--t2);font-weight:600">Klik untuk upload surat persetujuan</div>
+          <div style="font-size:11px;color:var(--t3);margin-top:3px">PDF, JPG, PNG — Maks. 5MB (opsional)</div>
+          <div id="apvcuti-file-preview" style="margin-top:10px;display:none">
+            <div style="background:var(--okb);border:1px solid var(--ok);border-radius:var(--rr);padding:7px 12px;display:inline-flex;align-items:center;gap:7px">
+              <span>✅</span>
+              <div id="apvcuti-file-name" style="font-size:13px;font-weight:600;color:var(--ok)"></div>
+              <button onclick="removeApvCutiFile(event)" style="background:none;border:none;color:var(--er);cursor:pointer;font-size:15px;padding:0 0 0 4px">✕</button>
+            </div>
+          </div>
+        </div>
+        <input type="file" id="apvcuti-file" accept=".pdf,.jpg,.jpeg,.png" style="display:none" onchange="prevApvCutiFile(this)">
+        <div style="font-size:11px;color:var(--t3);margin-top:5px">💡 Upload surat persetujuan agar karyawan bisa download buktinya</div>
+      </div>
+      <div class="fg">
+        <label class="fl">Catatan Persetujuan (opsional)</label>
+        <textarea class="fta" id="apvcuti-catatan" placeholder="Contoh: Disetujui, selamat berlibur! Pastikan pekerjaan sudah di-handover..." style="min-height:70px"></textarea>
+      </div>
+    </div>
+    <div class="mf">
+      <button class="btn bs" onclick="closeM('m-apvcuti');resetApvCutiForm()">Batal</button>
+      <button class="btn bd" onclick="closeM('m-apvcuti');opRejCuti(currentApvCutiId)">❌ Tolak</button>
+      <button class="btn bg" onclick="konfApvCuti()">✅ Setujui & Kirim</button>
+    </div>
+  </div>
+</div>
 
 <div class="mo" id="m-tolak"><div class="mdl" style="max-width:400px">
   <div class="mh"><div class="mt">❌ Alasan Penolakan</div><button class="mc" onclick="closeM('m-tolak')">✕</button></div>
@@ -1094,6 +1172,48 @@ async function doCout(){
   }
   cind=false; toast('Clock Out 🌙 Sampai besok!','ok'); rAbs();
 }
+// ─── CUTI FILE UPLOAD ───
+let cutiFileData = null; // simpan base64
+
+function prevCutiFile(input) {
+  const f = input.files[0];
+  if (!f) return;
+  // Cek ukuran max 5MB
+  if (f.size > 5 * 1024 * 1024) {
+    toast('File terlalu besar! Maksimal 5MB ❌','er');
+    input.value = '';
+    return;
+  }
+  const r = new FileReader();
+  r.onload = e => {
+    cutiFileData = e.target.result; // base64
+    $('cuti-file-name').textContent = f.name;
+    $('cuti-file-size').textContent = (f.size/1024).toFixed(1) + ' KB · ' + f.type;
+    $('cuti-file-preview').style.display = 'block';
+    $('cuti-upload-area').style.borderColor = 'var(--ok)';
+    $('cuti-upload-area').style.background = 'var(--okb)';
+  };
+  r.readAsDataURL(f);
+  toast('Dokumen berhasil dipilih 📎','ok');
+}
+
+function removeCutiFile(e) {
+  e.stopPropagation();
+  cutiFileData = null;
+  $('cuti-file').value = '';
+  $('cuti-file-preview').style.display = 'none';
+  $('cuti-upload-area').style.borderColor = 'var(--b2)';
+  $('cuti-upload-area').style.background = 'var(--s2)';
+}
+
+function resetCutiForm() {
+  cutiFileData = null;
+  $('cuti-file').value = '';
+  $('cuti-file-preview').style.display = 'none';
+  $('cuti-upload-area').style.borderColor = 'var(--b2)';
+  $('cuti-upload-area').style.background = 'var(--s2)';
+}
+
 function showSelfie(src) {
   let ov=document.getElementById('selfie-ov');
   if(!ov){ov=document.createElement('div');ov.id='selfie-ov';ov.style.cssText='position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:9999;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-direction:column;gap:12px';ov.onclick=()=>ov.style.display='none';document.body.appendChild(ov);}
@@ -1128,26 +1248,46 @@ function pSelfie(inp) {
 async function subCuti(){
   const from=$('cfr').value, to=$('cto').value, jn=$('cjn').value, al=$('cal').value;
   if(!from||!to){toast('Lengkapi tanggal 📅','wa');return;}
-  const data={id:'CT'+Date.now(),nama:ME.nama,uname:ME.uname,dari:from,sampai:to,jenis:jn,alasan:sx(al),status:'pending',tgl:td()};
-  showLoading('Mengirim cuti...');
+  if(!cutiFileData){toast('Upload dokumen pengajuan cuti dulu ya 📎','wa');return;}
+  // Hitung jumlah hari
+  const hari=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
+  // Cek sisa cuti
+  const jatah=getJatahCuti();
+  const used=CUTI.filter(c=>c.uname===ME.uname&&c.status==='approved').reduce((s,c)=>s+Math.max(1,Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1),0);
+  const sisa=Math.max(0,jatah-used);
+  if(hari>sisa){toast(`Sisa cuti kamu ${sisa} hari, tidak cukup untuk ${hari} hari ❌`,'er');return;}
+  const data={id:'CT'+Date.now(),nama:ME.nama,uname:ME.uname,dari:from,sampai:to,jenis:jn,alasan:sx(al),status:'pending',tgl:td(),hari,dokumen:cutiFileData};
+  showLoading('Mengirim pengajuan cuti...');
   const res=await sbInsert('cuti',data);
   hideLoading();
   if(!res.ok){toast('Gagal kirim ❌','er');return;}
   CUTI.unshift(data); closeM('m-cuti'); rCutiList(); uCutiSum();
-  addNotif('🏖️ Pengajuan cuti terkirim'); toast('Cuti terkirim! 🏖️','ok');
+  addNotif('🏖️ Pengajuan cuti '+jn+' ('+hari+' hari) terkirim');
+  toast('Cuti terkirim! 🏖️','ok');
   ['cfr','cto','cal'].forEach(id=>$(id).value='');
+  resetCutiForm();
 }
 function rCutiList() {
   const tb=$('clist'); if(!tb)return;
-  const f=CUTI.filter(c=>ME.role==='superManager'||c.uname===ME.uname);
-  tb.innerHTML=f.map(c=>`<tr><td>${c.tgl}</td><td>${c.dari}</td><td>${c.sampai}</td><td>${c.jenis}</td><td>${c.alasan||'-'}</td><td>${sbdg(c.status)}</td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--t3)">Belum ada 🏖️</td></tr>';
+  const filtered=CUTI.filter(c=>ME.role==='superManager'||c.uname===ME.uname);
+  tb.innerHTML=filtered.map(c=>`
+    <tr>
+      <td>${c.tgl}</td><td>${c.dari}</td><td>${c.sampai}</td>
+      <td style="font-weight:600">${c.hari||'-'} hari</td>
+      <td>${c.jenis}</td><td>${c.alasan||'-'}</td>
+      <td>${c.dokumen?`<button class="btn bs xs" onclick="lihatDokCuti('${c.id}','pengajuan')">📎</button>`:'<span style="color:var(--t3);font-size:11px">-</span>'}</td>
+      <td>${c.dokumen_balasan?`<button class="btn bg xs" onclick="lihatDokCuti('${c.id}','balasan')" title="Surat persetujuan">📄 Surat</button>`:'<span style="color:var(--t3);font-size:11px">-</span>'}</td>
+      <td>${sbdg(c.status)}</td>
+    </tr>`
+  ).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:16px">Belum ada cuti 🏖️</td></tr>';
   uCutiSum();
 }
 function uCutiSum() {
+  const jatah = getJatahCuti();
   const mine=CUTI.filter(c=>c.uname===ME.uname);
   const used=mine.filter(c=>c.status==='approved').reduce((s,c)=>s+Math.max(1,Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1),0);
   const pend=mine.filter(c=>c.status==='pending').length;
-  if($('csisa'))$('csisa').textContent=12-used;
+  if($('csisa'))$('csisa').textContent=Math.max(0,jatah-used);
   if($('cused'))$('cused').textContent=used;
   if($('cpend'))$('cpend').textContent=pend;
 }
@@ -1378,13 +1518,184 @@ async function saveRole(){
   toast('Role diubah ke '+RL[u.role]+' 💾','ok'); closeM('m-role'); rSD();
 }
 function delU(uid){if(!confirm('Nonaktifkan akun ini?'))return;delete U[uid];save();toast('Akun dinonaktifkan 🚫','wa');rSD();}
+async function konfirmResetCuti() {
+  const jatah = parseInt($('jatah-cuti').value) || 12;
+  if (!confirm(`Reset jatah cuti semua karyawan menjadi ${jatah} hari?\nData cuti yang sudah dipakai akan dihapus dan diganti fresh.`)) return;
+  showLoading('Mereset jatah cuti...');
+  try {
+    // Hapus semua data cuti yang approved/rejected (selesai)
+    // Biarkan yang masih pending
+    const doneCuti = CUTI.filter(c => c.status === 'approved' || c.status === 'rejected');
+    for (const ct of doneCuti) {
+      await sbDelete('cuti', {id: ct.id});
+    }
+    // Update CUTI di memory - hanya sisakan pending
+    CUTI = CUTI.filter(c => c.status === 'pending');
+    // Simpan jatah cuti ke localStorage
+    localStorage.setItem('yk26_jatah_cuti', jatah);
+    hideLoading();
+    toast(`Jatah cuti direset! Semua karyawan kini punya ${jatah} hari 🎉`, 'ok');
+    addNotif(`🔄 Jatah cuti semua karyawan direset menjadi ${jatah} hari oleh Super Manager`);
+    rSDcuti(); rCutiSummary();
+  } catch(e) {
+    hideLoading();
+    toast('Gagal reset cuti: '+e.message, 'er');
+  }
+}
+
+function getJatahCuti() {
+  return parseInt(localStorage.getItem('yk26_jatah_cuti')) || 12;
+}
+
+// ─── APPROVE CUTI WITH DOKUMEN ───
+let apvCutiFileData = null;
+let currentApvCutiId = null;
+
+function opApvCuti(id) {
+  currentApvCutiId = id;
+  const ct = CUTI.find(x=>x.id===id);
+  if(!ct) return;
+  // Tampilkan info pengajuan
+  const hari = ct.hari || Math.max(1,Math.round((new Date(ct.sampai)-new Date(ct.dari))/86400000)+1);
+  $('apvcuti-info').innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:5px 14px">
+      <span style="color:var(--t3)">Pemohon</span><span><b>${sx(ct.nama)}</b> <span class="uc">@${sx(ct.uname)}</span></span>
+      <span style="color:var(--t3)">Jenis</span><span>${ct.jenis}</span>
+      <span style="color:var(--t3)">Periode</span><span>${ct.dari} s/d ${ct.sampai} <b>(${hari} hari)</b></span>
+      <span style="color:var(--t3)">Alasan</span><span>${ct.alasan||'-'}</span>
+      ${ct.dokumen?`<span style="color:var(--t3)">Dok. Pengajuan</span><span><button class="btn bs xs" onclick="lihatDokCuti('${id}')">📎 Lihat</button></span>`:''}
+    </div>`;
+  resetApvCutiForm();
+  openM('m-apvcuti');
+}
+
+function prevApvCutiFile(input) {
+  const f = input.files[0]; if(!f) return;
+  if(f.size > 5*1024*1024){toast('File terlalu besar! Maks 5MB ❌','er');input.value='';return;}
+  const r = new FileReader();
+  r.onload = e => {
+    apvCutiFileData = e.target.result;
+    $('apvcuti-file-name').textContent = f.name;
+    $('apvcuti-file-preview').style.display = 'block';
+    $('apvcuti-upload-area').style.borderColor = 'var(--ok)';
+    $('apvcuti-upload-area').style.background = 'var(--okb)';
+  };
+  r.readAsDataURL(f);
+  toast('Dokumen persetujuan dipilih 📎','ok');
+}
+
+function removeApvCutiFile(e) {
+  e.stopPropagation();
+  apvCutiFileData = null;
+  $('apvcuti-file').value = '';
+  $('apvcuti-file-preview').style.display = 'none';
+  $('apvcuti-upload-area').style.borderColor = 'var(--b2)';
+  $('apvcuti-upload-area').style.background = 'var(--s2)';
+}
+
+function resetApvCutiForm() {
+  apvCutiFileData = null;
+  if($('apvcuti-file')) $('apvcuti-file').value = '';
+  if($('apvcuti-file-preview')) $('apvcuti-file-preview').style.display = 'none';
+  if($('apvcuti-upload-area')){$('apvcuti-upload-area').style.borderColor='var(--b2)';$('apvcuti-upload-area').style.background='var(--s2)';}
+  if($('apvcuti-catatan')) $('apvcuti-catatan').value = '';
+}
+
+function opRejCuti(id) {
+  closeM('m-apvcuti');
+  rejCuti(id);
+}
+
+async function konfApvCuti() {
+  const id = currentApvCutiId;
+  const catatan = sx($('apvcuti-catatan').value.trim());
+  const ct = CUTI.find(x=>x.id===id); if(!ct) return;
+  showLoading('Menyetujui cuti...');
+  const updateData = {
+    status: 'approved',
+    catatan_sm: catatan,
+    dokumen_balasan: apvCutiFileData || null
+  };
+  await sbUpdate('cuti',{id},updateData);
+  // Notif ke pemohon
+  const notifMsg = apvCutiFileData
+    ? `✅ Cuti ${ct.jenis} kamu (${ct.dari} s/d ${ct.sampai}) disetujui! Surat persetujuan tersedia.`
+    : `✅ Cuti ${ct.jenis} kamu (${ct.dari} s/d ${ct.sampai}) telah disetujui oleh Super Manager.`;
+  await sbInsert('notifikasi',{id:'N'+Date.now(),target:ct.uname,msg:notifMsg,unread:true,tgl:td()});
+  Object.assign(ct, updateData);
+  hideLoading();
+  closeM('m-apvcuti');
+  resetApvCutiForm();
+  toast('Cuti disetujui! 🏖️','ok');
+  addNotif('✅ Cuti @'+ct.uname+' disetujui');
+  rSDcuti(); rCutiSummary(); rCutiList(); uCutiSum();
+}
+
+function lihatDokCuti(id, jenis='pengajuan') {
+  const ct = CUTI.find(x=>x.id===id);
+  if(!ct){toast('Data tidak ditemukan','er');return;}
+  const src = jenis==='balasan' ? ct.dokumen_balasan : ct.dokumen;
+  if(!src){toast('Dokumen tidak tersedia','er');return;}
+  const win = window.open();
+  const judul = jenis==='balasan' ? 'Surat Persetujuan Cuti' : 'Dokumen Pengajuan Cuti';
+  if(src.startsWith('data:application/pdf')){
+    win.document.write(`<title>${judul}</title><iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`);
+  } else {
+    win.document.write(`<title>${judul}</title><body style="margin:0;background:#1a1a1a;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${src}" style="max-width:95vw;max-height:95vh;border-radius:8px"></body>`);
+  }
+}
+
+async function rCutiSummary() {
+  const tb = $('sd-cuti-summary'); if(!tb) return;
+  const jatah = getJatahCuti();
+  // Update input jatah
+  const ji = $('jatah-cuti'); if(ji) ji.value = jatah;
+  const allUsers = Object.values(U).filter(u => u.role !== 'superManager' && u.status === 'active');
+  tb.innerHTML = allUsers.map(u => {
+    const userCuti = CUTI.filter(c => c.uname === u.uname);
+    const used = userCuti.filter(c => c.status === 'approved').reduce((s,c) => {
+      return s + Math.max(1, Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1);
+    }, 0);
+    const pending = userCuti.filter(c => c.status === 'pending').length;
+    const sisa = Math.max(0, jatah - used);
+    const pct = Math.min(100, Math.round(used/jatah*100));
+    return `<tr>
+      <td><b>${sx(u.nama)}</b></td>
+      <td><span class="uc">@${sx(u.uname)}</span></td>
+      <td>${DM[u.div]||u.div}</td>
+      <td>${jatah} hari</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:7px">
+          <div style="flex:1;height:6px;background:var(--b);border-radius:3px;min-width:60px">
+            <div style="width:${pct}%;height:100%;background:${pct>80?'var(--er)':pct>50?'var(--go)':'var(--ok)'};border-radius:3px"></div>
+          </div>
+          <span style="font-size:12px;font-weight:600;color:${pct>80?'var(--er)':pct>50?'var(--go)':'var(--ok)'}">${used}</span>
+        </div>
+      </td>
+      <td><b style="color:${sisa<=3?'var(--er)':sisa<=6?'var(--go)':'var(--ok)'}">${sisa} hari</b></td>
+      <td>${pending>0?`<span class="bdg bwa">⏳ ${pending}</span>`:'<span style="color:var(--t3);font-size:12px">-</span>'}</td>
+    </tr>`;
+  }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:16px">Belum ada karyawan aktif</td></tr>';
+}
+
 function rSDcuti(){
   const tb=$('sdcut'); if(!tb)return;
-  tb.innerHTML=CUTI.map(c=>`
-    <tr><td>${sx(c.nama)}</td><td><span class="uc">@${sx(c.uname)}</span></td>
-    <td>${c.dari}</td><td>${c.sampai}</td><td>${c.jenis}</td><td>${sbdg(c.status)}</td>
-    <td><div style="display:flex;gap:3px">${c.status==='pending'?`<button class="btn bg xs" onclick="apvCuti('${c.id}')">✅</button><button class="btn bd xs" onclick="rejCuti('${c.id}')">❌</button>`:''}</div></td>
-    </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--t3)">Belum ada 🏖️</td></tr>';
+  const filterVal=($('sd-cuti-filter')||{}).value||'';
+  let data=filterVal?CUTI.filter(c=>c.status===filterVal):CUTI;
+  tb.innerHTML=data.map(c=>{
+    const hari=c.dari&&c.sampai?Math.max(1,Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1):'-';
+    return `<tr>
+      <td>${sx(c.nama)}</td><td><span class="uc">@${sx(c.uname)}</span></td>
+      <td>${c.dari}</td><td>${c.sampai}</td>
+      <td style="font-weight:600">${hari!=='-'?hari+' hr':'-'}</td>
+      <td>${c.jenis}</td><td>${sbdg(c.status)}</td>
+      <td><div style="display:flex;gap:3px">
+        ${c.dokumen?`<button class="btn bs xs" onclick="lihatDokCuti('${c.id}','pengajuan')" title="Dok. pengajuan">📎</button>`:''}
+        ${c.dokumen_balasan?`<button class="btn bg xs" onclick="lihatDokCuti('${c.id}','balasan')" title="Surat persetujuan">📄</button>`:''}
+        ${c.status==='pending'?`<button class="btn bg xs" onclick="opApvCuti('${c.id}')">✅</button><button class="btn bd xs" onclick="rejCuti('${c.id}')">❌</button>`:''}
+      </div></td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:20px">Belum ada cuti 🏖️</td></tr>';
 }
 async function apvCuti(id){
   const c2=CUTI.find(x=>x.id===id); if(!c2)return;
@@ -1633,6 +1944,9 @@ function sit(grp,target,btn){
   document.querySelectorAll(`[id^="${pm[grp]||'x-'}"]`).forEach(e=>e.style.display='none');
   const t=$(target);if(t)t.style.display='block';
   if(btn){const par=btn.closest('.it');if(par)par.querySelectorAll('.itb').forEach(t=>t.classList.remove('on'));btn.classList.add('on');}
+  // Load data khusus per tab
+  if(target==='sd-cu') { rSDcuti(); rCutiSummary(); }
+  if(target==='sd-ab') { /* trigger manual */ }
 }
 
 // ═══════════════════════════════════════════
