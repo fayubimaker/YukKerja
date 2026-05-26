@@ -420,7 +420,7 @@ tr:hover td{background:var(--s2)}
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
       <div class="it" style="margin-bottom:0">
         <div class="itb on" onclick="sit('pj','pj-l',this)">📋 Daftar</div>
-        <div class="itb" onclick="sit('pj','pj-n',this)">✏️ Buat Baru</div>
+        <div class="itb" onclick="sit('pj','pj-n',this);showKetentuan()">✏️ Buat Baru</div>
       </div>
       <div style="display:flex;gap:7px;flex-wrap:wrap">
         <button class="btn bs sm" onclick="downloadPJExcel()">📊 Download Excel</button>
@@ -634,6 +634,114 @@ tr:hover td{background:var(--s2)}
   </div>
   <div class="mf"><button class="btn bs" onclick="closeM('m-bayar')">Batal</button><button class="btn bg" onclick="konfBayar()">✅ Konfirmasi</button></div>
 </div></div>
+
+<!-- Modal Ketentuan Waktu Pengajuan -->
+<div class="mo" id="m-ketentuan">
+  <div class="mdl" style="max-width:540px">
+    <div class="mh" style="background:var(--r);border-radius:var(--rxl) var(--rxl) 0 0">
+      <div class="mt" style="color:#fff;display:flex;align-items:center;gap:8px">
+        <span style="font-size:20px">⚠️</span> Ketentuan Waktu Pengajuan Dana
+      </div>
+      <button class="mc" onclick="closeKetentuan()" style="color:rgba(255,255,255,.7)">✕</button>
+    </div>
+    <div class="mb" style="padding:0">
+
+      <!-- Banner merah -->
+      <div style="background:var(--r);padding:16px 22px;border-bottom:3px solid var(--r2)">
+        <div style="color:#fff;font-size:13px;line-height:1.7">
+          Setiap pengajuan dana wajib diajukan
+          <span style="background:#FF8B94;color:#fff;font-weight:700;padding:2px 8px;border-radius:20px;font-size:13px">H-1</span>
+          sebelum dana dibutuhkan. Pengajuan di hari yang sama <b>tidak dijamin</b> diproses.
+        </div>
+      </div>
+
+      <!-- Tabel ketentuan -->
+      <div style="padding:20px 22px">
+        <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:12px">📋 Tabel Batas Waktu</div>
+        <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px">
+          <thead>
+            <tr>
+              <th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Klasifikasi</th>
+              <th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Kapan Digunakan</th>
+              <th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Tenggat Pengajuan</th>
+              <th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px;text-transform:uppercase;letter-spacing:.5px">Target Proses</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:700">📌 Normal</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Pengeluaran rutin yang sudah terencana</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:600;color:var(--r2)">H-1 sebelum pukul 16.00 WIB</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">1 hari kerja berikutnya</td>
+            </tr>
+            <tr>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:700">🧾 Reimburse</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Penggantian biaya yang telah dikeluarkan terlebih dahulu oleh karyawan</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:600;color:var(--r2)">Maks. 7 hari kerja setelah pengeluaran</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">1 hari kerja berikutnya</td>
+            </tr>
+            <tr style="background:var(--gl)">
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:700;color:var(--go)">⭐ Important</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Prioritas tinggi, sudah direncanakan</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:600;color:var(--r2)">H-1 sebelum pukul 16.00 WIB</td>
+              <td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Diprioritaskan hari yang sama</td>
+            </tr>
+            <tr style="background:var(--rl)">
+              <td style="padding:9px 12px;font-weight:700;color:var(--er)">🔴 Urgent</td>
+              <td style="padding:9px 12px;color:var(--t2)">Kebutuhan mendadak tidak terencana</td>
+              <td style="padding:9px 12px;font-weight:700;color:var(--er)">Hari yang sama, maks. pukul 14.00 WIB</td>
+              <td style="padding:9px 12px;color:var(--t2)">Diusahakan hari yang sama</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <!-- Poin penting -->
+        <div style="font-size:12px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">📌 Poin Penting</div>
+        <div style="display:flex;flex-direction:column;gap:7px;margin-bottom:18px">
+          <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px">
+            <span style="color:var(--ok);font-size:15px;flex-shrink:0;margin-top:1px">✅</span>
+            <span>Isi semua kolom dengan <b>lengkap dan jelas</b>, termasuk tujuan pembayaran.</span>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px">
+            <span style="color:var(--ok);font-size:15px;flex-shrink:0;margin-top:1px">✅</span>
+            <span>Rincikan setiap item pengeluaran secara <b>spesifik</b>.</span>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px">
+            <span style="color:var(--ok);font-size:15px;flex-shrink:0;margin-top:1px">✅</span>
+            <span>Untuk reimburse, <b>wajib upload nota/kwitansi</b> yang jelas dan terbaca.</span>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px">
+            <span style="color:var(--er);font-size:15px;flex-shrink:0;margin-top:1px">❌</span>
+            <span>Jangan gunakan <b>Urgent</b> untuk keperluan yang seharusnya bisa direncanakan.</span>
+          </div>
+          <div style="display:flex;gap:9px;align-items:flex-start;font-size:13px">
+            <span style="color:var(--er);font-size:15px;flex-shrink:0;margin-top:1px">❌</span>
+            <span>Pengajuan <b>fiktif atau tidak sesuai fakta</b> akan dikenakan sanksi sesuai peraturan perusahaan.</span>
+          </div>
+        </div>
+
+        <!-- Checklist -->
+        <div style="background:var(--s2);border-radius:var(--rr);padding:13px 16px;border:1px solid var(--b)">
+          <div style="font-size:12px;font-weight:700;color:var(--t2);margin-bottom:8px">☑️ Dengan melanjutkan pengajuan, saya menyatakan:</div>
+          <div style="font-size:12px;color:var(--t2);line-height:1.8">
+            • Informasi yang saya isi adalah <b>benar dan dapat dipertanggungjawabkan</b><br>
+            • Saya telah memahami <b>ketentuan waktu</b> pengajuan yang berlaku<br>
+            • Saya bersedia <b>menerima konsekuensi</b> apabila terdapat pelanggaran
+          </div>
+        </div>
+      </div>
+    </div>
+    <div class="mf" style="justify-content:space-between;align-items:center">
+      <label style="display:flex;align-items:center;gap:7px;font-size:13px;color:var(--t2);cursor:pointer">
+        <input type="checkbox" id="ket-noshow" style="width:15px;height:15px;accent-color:var(--r2)">
+        Jangan tampilkan lagi hari ini
+      </label>
+      <button class="btn bp" onclick="closeKetentuan()" style="min-width:140px">
+        ✅ Mengerti, Lanjutkan
+      </button>
+    </div>
+  </div>
+</div>
 
 <!-- Modal Approve Cuti dengan Dokumen -->
 <div class="mo" id="m-apvcuti">
@@ -1049,6 +1157,28 @@ function exportPJtoCSV(data, filename) {
   document.body.appendChild(a); a.click();
   document.body.removeChild(a); URL.revokeObjectURL(url);
   toast('File Excel berhasil didownload! 📊','ok');
+}
+
+// ═══════════════════════════════════════════
+// KETENTUAN WAKTU PENGAJUAN
+// ═══════════════════════════════════════════
+function showKetentuan() {
+  // Cek apakah user sudah centang "jangan tampilkan hari ini"
+  const skipKey = 'yk26_ket_skip_' + td();
+  if (localStorage.getItem(skipKey) === '1') return;
+  // Reset checkbox
+  const cb = $('ket-noshow');
+  if (cb) cb.checked = false;
+  openM('m-ketentuan');
+}
+
+function closeKetentuan() {
+  // Kalau centang "jangan tampilkan", simpan flag sampai besok
+  const cb = $('ket-noshow');
+  if (cb && cb.checked) {
+    localStorage.setItem('yk26_ket_skip_' + td(), '1');
+  }
+  closeM('m-ketentuan');
 }
 
 // ═══════════════════════════════════════════
