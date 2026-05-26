@@ -417,9 +417,15 @@ tr:hover td{background:var(--s2)}
   <!-- PENGAJUAN -->
   <div class="pg" id="pg-pengajuan">
     <div class="ptit">💸 Pengajuan Dana & Reimburse</div><div class="psub">Ajukan dana atau reimburse pengeluaran</div>
-    <div class="it">
-      <div class="itb on" onclick="sit('pj','pj-l',this)">📋 Daftar</div>
-      <div class="itb" onclick="sit('pj','pj-n',this)">✏️ Buat Baru</div>
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:16px">
+      <div class="it" style="margin-bottom:0">
+        <div class="itb on" onclick="sit('pj','pj-l',this)">📋 Daftar</div>
+        <div class="itb" onclick="sit('pj','pj-n',this)">✏️ Buat Baru</div>
+      </div>
+      <div style="display:flex;gap:7px;flex-wrap:wrap">
+        <button class="btn bs sm" onclick="downloadPJExcel()">📊 Download Excel</button>
+        <button class="btn bs sm" onclick="downloadPJPDF()">📄 Download PDF</button>
+      </div>
     </div>
     <div id="pj-l"><div id="pj-lc"><div class="emp"><span class="e">📄</span><p>Belum ada</p></div></div></div>
     <div id="pj-n" style="display:none">
@@ -488,9 +494,13 @@ tr:hover td{background:var(--s2)}
     </div>
     <div id="sd-pj">
       <div class="card"><div class="ch"><span class="ct">💸 Semua Pengajuan</span>
-        <select class="fsl" style="width:auto;padding:5px 9px;font-size:12px" id="sdf" onchange="rSDpj()">
-          <option value="">Semua</option><option value="pending">Pending</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option><option value="paid">Dibayar</option>
-        </select></div>
+        <div style="display:flex;gap:7px;align-items:center;flex-wrap:wrap">
+          <select class="fsl" style="padding:5px 9px;font-size:12px;width:auto" id="sdf" onchange="rSDpj()">
+            <option value="">Semua</option><option value="pending">Pending</option><option value="approved">Disetujui</option><option value="rejected">Ditolak</option><option value="paid">Dibayar</option>
+          </select>
+          <button class="btn bs sm" onclick="downloadAllPJExcel()">📊 Excel</button>
+          <button class="btn bs sm" onclick="downloadAllPJPDF()">📄 PDF</button>
+        </div></div>
         <div class="cb tw"><table><thead><tr><th>Pemohon</th><th>Username</th><th>Jenis</th><th>Keperluan</th><th>Total</th><th>Prioritas</th><th>Status</th><th>Aksi</th></tr></thead><tbody id="sdpjt"></tbody></table></div>
       </div>
     </div>
@@ -837,6 +847,209 @@ function showScr(id) {
   });
 }
 function goAuth() { showScr('scr-auth'); }
+
+
+// ═══════════════════════════════════════════
+// DOWNLOAD PENGAJUAN
+// ═══════════════════════════════════════════
+
+// Format rupiah tanpa HTML
+const rpTxt = n => 'Rp ' + Math.round(n).toLocaleString('id-ID');
+
+// Generate HTML report untuk 1 pengajuan
+function genDetailHTML(p) {
+  const statusLabel = {pending:'⏳ Menunggu',approved_spv:'🔍 Disetujui Supervisor',approved_mgr:'🎯 Disetujui Manager',approved:'✅ Final Disetujui',rejected:'❌ Ditolak',paid:'💳 Sudah Dibayar'};
+  const tipeLabel = {transfer:'🏦 Transfer Bank', cash:'💵 Cash', qris:'📱 QRIS'};
+  const items = Array.isArray(p.items) ? p.items : (typeof p.items==='string'?JSON.parse(p.items||'[]'):[]);
+  return `<!DOCTYPE html>
+<html lang="id">
+<head><meta charset="UTF-8"><title>Laporan Pengajuan ${p.id}</title>
+<style>
+  body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;margin:0;padding:0}
+  .wrap{max-width:700px;margin:0 auto;padding:32px}
+  .header{background:#8B0000;color:#fff;padding:20px 24px;border-radius:8px;margin-bottom:24px}
+  .header h1{margin:0;font-size:22px;font-weight:800}
+  .header p{margin:4px 0 0;opacity:.7;font-size:13px}
+  .badge{display:inline-block;padding:4px 12px;border-radius:20px;font-size:12px;font-weight:700}
+  .badge-pending{background:#FEF3C7;color:#92400E}
+  .badge-approved{background:#D1FAE5;color:#065F46}
+  .badge-rejected{background:#FEE2E2;color:#991B1B}
+  .badge-paid{background:#DBEAFE;color:#1E40AF}
+  .section{margin-bottom:20px}
+  .section-title{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px}
+  .grid{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:13px}
+  .grid .lbl{color:#666}
+  .grid .val{font-weight:600}
+  table{width:100%;border-collapse:collapse;margin-top:8px}
+  th{background:#f5f5f5;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px}
+  td{padding:9px 12px;border-bottom:1px solid #eee;font-size:13px}
+  .total-row td{font-weight:700;background:#FFF5F5;color:#8B0000;font-size:14px}
+  .history{margin-top:20px}
+  .hist-item{display:flex;gap:12px;padding:10px 0;border-bottom:1px solid #eee}
+  .hist-dot{width:10px;height:10px;border-radius:50%;background:#8B0000;margin-top:4px;flex-shrink:0}
+  .hist-dot.done{background:#059669}
+  .hist-dot.rejected{background:#DC2626}
+  .footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center}
+  .tujuan-box{background:#FFF5F5;border:1px solid #FEE2E2;border-radius:6px;padding:10px 14px;margin-top:8px}
+  @media print{body{margin:0}.wrap{padding:20px}}
+</style>
+</head>
+<body><div class="wrap">
+  <div class="header">
+    <h1>💼 YukKerja — Laporan Pengajuan Dana</h1>
+    <p>Dicetak: ${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})} · ${new Date().toLocaleTimeString('id-ID')}</p>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Informasi Pengajuan</div>
+    <div class="grid">
+      <span class="lbl">ID Pengajuan</span><span class="val">${p.id}</span>
+      <span class="lbl">Status</span><span class="val">${statusLabel[p.status]||p.status}</span>
+      <span class="lbl">Jenis</span><span class="val">${p.jenis==='reimburse'?'🧾 Reimburse':'💵 Pengajuan Dana'}</span>
+      <span class="lbl">Klasifikasi</span><span class="val">${p.klas==='urgent'?'🔴 Urgent':p.klas==='important'?'⭐ Important':'📌 Normal'}</span>
+      <span class="lbl">Tanggal Ajuan</span><span class="val">${p.tgl}</span>
+      <span class="lbl">Divisi</span><span class="val">${p.div}</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Pemohon</div>
+    <div class="grid">
+      <span class="lbl">Nama</span><span class="val">${p.nama}</span>
+      <span class="lbl">Username</span><span class="val">@${p.uname}</span>
+    </div>
+  </div>
+
+  <div class="section">
+    <div class="section-title">Keperluan</div>
+    <p style="margin:0;line-height:1.6">${p.desk}</p>
+    ${p.tujuan?`<div class="tujuan-box"><b>${tipeLabel[p.tipe_bayar]||'Tujuan'}:</b> ${p.tujuan}</div>`:''}
+  </div>
+
+  <div class="section">
+    <div class="section-title">Rincian Item</div>
+    <table>
+      <thead><tr><th>No.</th><th>Item</th><th style="text-align:right">Jumlah</th></tr></thead>
+      <tbody>
+        ${items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.n||it.nama}</td><td style="text-align:right">${rpTxt(it.j||it.jumlah||0)}</td></tr>`).join('')}
+        <tr class="total-row"><td colspan="2">TOTAL</td><td style="text-align:right">${rpTxt(p.total)}</td></tr>
+      </tbody>
+    </table>
+  </div>
+
+  <div class="section history">
+    <div class="section-title">Riwayat Persetujuan</div>
+    <div class="hist-item">
+      <div class="hist-dot done"></div>
+      <div><b>Pengajuan Dibuat</b><br><span style="color:#666;font-size:12px">${p.tgl} oleh ${p.nama} (@${p.uname})</span></div>
+    </div>
+    ${['approved_spv','approved_mgr','approved','paid'].includes(p.status)||p.status==='rejected'?`
+    <div class="hist-item">
+      <div class="hist-dot ${['approved_spv','approved_mgr','approved','paid'].includes(p.status)?'done':'rejected'}"></div>
+      <div><b>${p.status==='rejected'?'Ditolak':'Disetujui Supervisor'}</b><br><span style="color:#666;font-size:12px">Status: ${statusLabel[p.status]||p.status}</span></div>
+    </div>`:''}
+    ${['approved_mgr','approved','paid'].includes(p.status)?`
+    <div class="hist-item">
+      <div class="hist-dot done"></div>
+      <div><b>Disetujui Manager</b><br><span style="color:#666;font-size:12px">Diteruskan ke Super Manager</span></div>
+    </div>`:''}
+    ${['approved','paid'].includes(p.status)?`
+    <div class="hist-item">
+      <div class="hist-dot done"></div>
+      <div><b>✅ Final Disetujui Super Manager</b><br><span style="color:#666;font-size:12px">Siap untuk diproses kasir</span></div>
+    </div>`:''}
+    ${p.status==='paid'?`
+    <div class="hist-item">
+      <div class="hist-dot done"></div>
+      <div><b>💳 Pembayaran Dikonfirmasi</b><br><span style="color:#666;font-size:12px">Pengajuan selesai</span></div>
+    </div>`:''}
+    ${p.reason?`
+    <div class="hist-item">
+      <div class="hist-dot rejected"></div>
+      <div><b>Alasan Penolakan</b><br><span style="color:#DC2626;font-size:12px">${p.reason}</span></div>
+    </div>`:''}
+  </div>
+
+  <div class="footer">
+    Dokumen ini digenerate otomatis oleh sistem YukKerja<br>
+    ID: ${p.id} · ${new Date().toISOString()}
+  </div>
+</div></body></html>`;
+}
+
+// Download PDF 1 pengajuan (dari tombol di detail modal)
+function downloadDetailPDF(id) {
+  const p = PJ.find(x=>x.id===id); if(!p){toast('Data tidak ditemukan','er');return;}
+  const html = genDetailHTML(p);
+  const win = window.open('','_blank');
+  win.document.write(html);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+  toast('Membuka preview PDF... 📄','ok');
+}
+
+// Download semua pengajuan milik user sebagai PDF
+function downloadPJPDF() {
+  const myPJ = PJ.filter(p=>ME.role==='superManager'||p.uid===ME.id);
+  if(!myPJ.length){toast('Belum ada pengajuan','wa');return;}
+  const win = window.open('','_blank');
+  const allHTML = myPJ.map(p=>genDetailHTML(p)).join('<div style="page-break-after:always"></div>');
+  win.document.write(allHTML);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+  toast('Membuka PDF semua pengajuan... 📄','ok');
+}
+
+// Download Excel (CSV) semua pengajuan user
+function downloadPJExcel() {
+  const myPJ = PJ.filter(p=>ME.role==='superManager'||p.uid===ME.id);
+  if(!myPJ.length){toast('Belum ada pengajuan','wa');return;}
+  exportPJtoCSV(myPJ, 'Pengajuan_'+ME.uname+'_'+td().replace(/\//g,'-'));
+}
+
+// Download semua pengajuan (Super Dashboard)
+function downloadAllPJPDF() {
+  const fv = ($('sdf')||{}).value||'';
+  const data = fv ? PJ.filter(p=>p.status===fv) : PJ;
+  if(!data.length){toast('Tidak ada data','wa');return;}
+  const win = window.open('','_blank');
+  const allHTML = data.map(p=>genDetailHTML(p)).join('<div style="page-break-after:always"></div>');
+  win.document.write(allHTML);
+  win.document.close();
+  win.onload = () => { win.focus(); win.print(); };
+  toast('Membuka PDF... 📄','ok');
+}
+
+function downloadAllPJExcel() {
+  const fv = ($('sdf')||{}).value||'';
+  const data = fv ? PJ.filter(p=>p.status===fv) : PJ;
+  if(!data.length){toast('Tidak ada data','wa');return;}
+  exportPJtoCSV(data, 'Semua_Pengajuan_'+td().replace(/\//g,'-'));
+}
+
+// Export ke CSV (buka di Excel)
+function exportPJtoCSV(data, filename) {
+  const headers = ['ID','Pemohon','Username','Divisi','Jenis','Keperluan','Tipe Bayar','Tujuan','Total (Rp)','Klasifikasi','Status','Tanggal'];
+  const rows = data.map(p => {
+    const statusLabel = {pending:'Menunggu',approved_spv:'Disetujui SPV',approved_mgr:'Disetujui Manager',approved:'Final Disetujui',rejected:'Ditolak',paid:'Dibayar'};
+    return [
+      p.id, p.nama, '@'+p.uname, p.div,
+      p.jenis==='reimburse'?'Reimburse':'Pengajuan Dana',
+      '"'+String(p.desk||'').replace(/"/g,'""')+'"',
+      p.tipe_bayar||'-',
+      '"'+String(p.tujuan||'-').replace(/"/g,'""')+'"',
+      p.total, p.klas, statusLabel[p.status]||p.status, p.tgl
+    ].join(',');
+  });
+  const csv = [headers.join(','), ...rows].join('\n');
+  const blob = new Blob(['\uFEFF'+csv], {type:'text/csv;charset=utf-8'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = filename+'.csv';
+  document.body.appendChild(a); a.click();
+  document.body.removeChild(a); URL.revokeObjectURL(url);
+  toast('File Excel berhasil didownload! 📊','ok');
+}
 
 // ═══════════════════════════════════════════
 // TUJUAN PEMBAYARAN
@@ -1809,7 +2022,7 @@ function showDet(id){
     </table>
     ${p.reason?`<div style="background:var(--erb);border-radius:var(--rr);padding:10px;font-size:13px;color:var(--er)">❌ <b>Ditolak:</b> ${sx(p.reason)}</div>`:''}`;
   const ft=$('m-det-f');
-  ft.innerHTML=`<button class="btn bs" onclick="closeM('m-det')">Tutup</button>`;
+  ft.innerHTML=`<button class="btn bs" onclick="closeM('m-det')">Tutup</button><button class="btn bs sm" onclick="downloadDetailPDF('${p.id}')">📄 Download PDF</button>`;
   const canAct =
     (ME.role==='supervisor' && p.status==='pending') ||
     (ME.role==='manager' && p.status==='approved_spv') ||
