@@ -555,7 +555,7 @@ tr:hover td{background:var(--s2)}
           </div>
         </div>
         <div class="cb tw">
-          <table><thead><tr><th>Nama</th><th>Username</th><th>Divisi</th><th>Jatah</th><th>Digunakan</th><th>Sisa</th><th>Pending</th></tr></thead><tbody id="sd-cuti-summary"></tbody></table>
+          <table><thead><tr><th>Nama</th><th>Username</th><th>Divisi</th><th>Jatah (Edit)</th><th>Digunakan</th><th>Sisa</th><th>Pending</th></tr></thead><tbody id="sd-cuti-summary"></tbody></table>
         </div>
       </div>
       <div class="card">
@@ -1719,7 +1719,7 @@ function setupApp() {
 }
 
 const NAVCFG = {
-  superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir']],
+  superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir'],['direksi_dash','🏛️ Lap. Direksi']],
   direksi:       [['dashboard','🏠 Beranda'],['todo','📋 To Do'],['direksi_dash','🏛️ Dashboard Direksi']],
   manager:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
   supervisor:    [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
@@ -1868,7 +1868,7 @@ async function subCuti(){
   // Hitung jumlah hari
   const hari=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
   // Cek sisa cuti
-  const jatah=getJatahCuti();
+  const jatah=await getJatahUser(ME.uname);
   const used=CUTI.filter(c=>c.uname===ME.uname&&c.status==='approved').reduce((s,c)=>s+Math.max(1,Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1),0);
   const sisa=Math.max(0,jatah-used);
   if(hari>sisa){toast(`Sisa cuti kamu ${sisa} hari, tidak cukup untuk ${hari} hari ❌`,'er');return;}
@@ -1898,8 +1898,8 @@ function rCutiList() {
   ).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:16px">Belum ada cuti 🏖️</td></tr>';
   uCutiSum();
 }
-function uCutiSum() {
-  const jatah = getJatahCuti();
+async function uCutiSum() {
+  const jatah = await getJatahUser(ME.uname);
   const mine=CUTI.filter(c=>c.uname===ME.uname);
   const used=mine.filter(c=>c.status==='approved').reduce((s,c)=>s+Math.max(1,Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1),0);
   const pend=mine.filter(c=>c.status==='pending').length;
@@ -2163,6 +2163,18 @@ function getJatahCuti() {
   return parseInt(localStorage.getItem('yk26_jatah_cuti')) || 12;
 }
 
+// Cache jatah cuti per user (diisi saat loadAllData)
+let JATAH_CACHE = {};
+
+async function getJatahUser(uname) {
+  if (JATAH_CACHE[uname]) return JATAH_CACHE[uname];
+  try {
+    const rows = await sbGet('jatah_cuti', 'uname=eq.'+encodeURIComponent(uname)+'&limit=1');
+    if (rows.length) { JATAH_CACHE[uname] = rows[0].jatah; return rows[0].jatah; }
+  } catch(e) {}
+  return getJatahCuti(); // fallback ke default
+}
+
 // ─── APPROVE CUTI WITH DOKUMEN ───
 let apvCutiFileData = null;
 let currentApvCutiId = null;
@@ -2263,11 +2275,19 @@ function lihatDokCuti(id, jenis='pengajuan') {
 
 async function rCutiSummary() {
   const tb = $('sd-cuti-summary'); if(!tb) return;
-  const jatah = getJatahCuti();
-  // Update input jatah
-  const ji = $('jatah-cuti'); if(ji) ji.value = jatah;
+  const defaultJatah = getJatahCuti();
+  const ji = $('jatah-cuti'); if(ji) ji.value = defaultJatah;
+
+  // Load jatah custom per orang dari Supabase
+  let jatahCustom = {};
+  try {
+    const rows = await sbGet('jatah_cuti', 'select=*');
+    rows.forEach(r => { jatahCustom[r.uname] = r.jatah; });
+  } catch(e) {}
+
   const allUsers = Object.values(U).filter(u => u.role !== 'superManager' && u.status === 'active');
   tb.innerHTML = allUsers.map(u => {
+    const jatah = jatahCustom[u.uname] || defaultJatah;
     const userCuti = CUTI.filter(c => c.uname === u.uname);
     const used = userCuti.filter(c => c.status === 'approved').reduce((s,c) => {
       return s + Math.max(1, Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1);
@@ -2279,7 +2299,15 @@ async function rCutiSummary() {
       <td><b>${sx(u.nama)}</b></td>
       <td><span class="uc">@${sx(u.uname)}</span></td>
       <td>${DM[u.div]||u.div}</td>
-      <td>${jatah} hari</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:5px">
+          <input type="number" value="${jatah}" min="1" max="60"
+            style="width:52px;padding:3px 6px;font-size:12px;border:1px solid var(--b2);border-radius:6px;text-align:center;background:var(--s)"
+            onchange="saveJatahCuti('${u.uname}',this.value)"
+            title="Edit jatah cuti @${sx(u.uname)}">
+          <span style="font-size:11px;color:var(--t3)">hari</span>
+        </div>
+      </td>
       <td>
         <div style="display:flex;align-items:center;gap:7px">
           <div style="flex:1;height:6px;background:var(--b);border-radius:3px;min-width:60px">
@@ -2292,6 +2320,19 @@ async function rCutiSummary() {
       <td>${pending>0?`<span class="bdg bwa">⏳ ${pending}</span>`:'<span style="color:var(--t3);font-size:12px">-</span>'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:16px">Belum ada karyawan aktif</td></tr>';
+}
+
+async function saveJatahCuti(uname, val) {
+  const jatah = parseInt(val);
+  if (isNaN(jatah) || jatah < 1) return;
+  // Cek apakah sudah ada
+  const existing = await sbGet('jatah_cuti', 'uname=eq.'+encodeURIComponent(uname)+'&limit=1');
+  if (existing.length) {
+    await sbUpdate('jatah_cuti', {uname}, {jatah});
+  } else {
+    await sbInsert('jatah_cuti', {uname, jatah});
+  }
+  toast('Jatah cuti @'+uname+' diubah ke '+jatah+' hari 💾','ok');
 }
 
 function rSDcuti(){
