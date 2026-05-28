@@ -209,6 +209,7 @@ tr:hover td{background:var(--s2)}
 .stp .s.dn .slb{color:var(--ok)}.stp .s.ac .slb{color:var(--r2);font-weight:600}
 .sbdg{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ok);background:var(--okb);border-radius:20px;padding:2px 8px;font-weight:600}
 .kcard{background:var(--s);border:1px solid var(--b);border-radius:var(--rr);padding:11px 13px;cursor:pointer;transition:all .2s}
+.q1-card{border-left:3px solid var(--er)}.q2-card{border-left:3px solid var(--in)}.q3-card{border-left:3px solid var(--go)}.q4-card{border-left:3px solid var(--b2)}
 .kcard:hover{box-shadow:var(--shm);border-color:var(--b2)}
 .kcard.done-card{opacity:.65}
 .kcard .kt{font-size:13px;font-weight:600;color:var(--t);margin-bottom:4px;display:flex;align-items:flex-start;gap:7px}
@@ -555,7 +556,7 @@ tr:hover td{background:var(--s2)}
           </div>
         </div>
         <div class="cb tw">
-          <table><thead><tr><th>Nama</th><th>Username</th><th>Divisi</th><th>Jatah</th><th>Digunakan</th><th>Sisa</th><th>Pending</th></tr></thead><tbody id="sd-cuti-summary"></tbody></table>
+          <table><thead><tr><th>Nama</th><th>Username</th><th>Divisi</th><th>Jatah (Edit)</th><th>Digunakan</th><th>Sisa</th><th>Pending</th></tr></thead><tbody id="sd-cuti-summary"></tbody></table>
         </div>
       </div>
       <div class="card">
@@ -608,6 +609,7 @@ tr:hover td{background:var(--s2)}
     <div class="psub">Kelola tugas dan project tim kamu</div>
     <div class="it">
       <div class="itb on" onclick="sit('td','td-kanban',this);rKanban()">🗂️ Kanban</div>
+      <div class="itb" onclick="sit('td','td-matrix',this);rMatrix()">🎯 Eisenhower</div>
       <div class="itb" onclick="sit('td','td-cal',this);rCal()">📅 Kalender</div>
     </div>
 
@@ -645,6 +647,83 @@ tr:hover td{background:var(--s2)}
           <div id="cards-done" style="background:var(--okb);border:1px solid var(--b);border-top:none;border-radius:0 0 var(--rl2) var(--rl2);padding:10px;min-height:300px;display:flex;flex-direction:column;gap:8px"></div>
         </div>
       </div>
+    </div>
+
+    <!-- EISENHOWER MATRIX -->
+    <div id="td-matrix" style="display:none">
+      <div style="margin-bottom:14px">
+        <div style="font-size:13px;color:var(--t2);line-height:1.7;margin-bottom:12px">
+          <b>Eisenhower Matrix</b> membantu kamu menentukan prioritas berdasarkan tingkat 
+          <b>urgensi</b> dan <b>kepentingan</b> setiap tugas.
+        </div>
+        <div style="display:grid;grid-template-columns:auto 1fr 1fr;gap:0;border:1px solid var(--b);border-radius:var(--rl2);overflow:hidden">
+          <!-- Header -->
+          <div style="background:var(--s2);padding:10px;border-right:1px solid var(--b);border-bottom:1px solid var(--b)"></div>
+          <div style="background:var(--rl);padding:10px 14px;text-align:center;border-right:1px solid var(--b);border-bottom:1px solid var(--b)">
+            <div style="font-size:11px;font-weight:700;color:var(--r2);text-transform:uppercase;letter-spacing:.5px">🔴 Mendesak</div>
+          </div>
+          <div style="background:var(--s2);padding:10px 14px;text-align:center;border-bottom:1px solid var(--b)">
+            <div style="font-size:11px;font-weight:700;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">⚪ Tidak Mendesak</div>
+          </div>
+
+          <!-- Baris Penting -->
+          <div style="background:var(--rl);padding:10px;border-right:1px solid var(--b);border-bottom:1px solid var(--b);display:flex;align-items:center;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg)">
+            <div style="font-size:11px;font-weight:700;color:var(--r2);text-transform:uppercase;letter-spacing:.5px">⭐ Penting</div>
+          </div>
+          <!-- Q1: Penting + Mendesak -->
+          <div style="background:var(--rl);border-right:1px solid var(--b);border-bottom:1px solid var(--b);padding:14px;min-height:200px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+              <span style="font-size:18px">🔥</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--r2)">Q1 — Lakukan Sekarang</div>
+                <div style="font-size:11px;color:var(--t3)">Penting & Mendesak</div>
+              </div>
+            </div>
+            <div id="q1-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+          <!-- Q2: Penting + Tidak Mendesak -->
+          <div style="background:#EFF8FF;border-bottom:1px solid var(--b);padding:14px;min-height:200px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+              <span style="font-size:18px">📅</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--in)">Q2 — Jadwalkan</div>
+                <div style="font-size:11px;color:var(--t3)">Penting, Tidak Mendesak</div>
+              </div>
+            </div>
+            <div id="q2-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+
+          <!-- Baris Tidak Penting -->
+          <div style="background:var(--s2);padding:10px;border-right:1px solid var(--b);display:flex;align-items:center;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg)">
+            <div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px">⬇️ Tidak Penting</div>
+          </div>
+          <!-- Q3: Tidak Penting + Mendesak -->
+          <div style="background:#FEF3C7;border-right:1px solid var(--b);padding:14px;min-height:180px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+              <span style="font-size:18px">🤝</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--wa)">Q3 — Delegasikan</div>
+                <div style="font-size:11px;color:var(--t3)">Tidak Penting, Mendesak</div>
+              </div>
+            </div>
+            <div id="q3-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+          <!-- Q4: Tidak Penting + Tidak Mendesak -->
+          <div style="background:var(--s2);padding:14px;min-height:180px">
+            <div style="display:flex;align-items:center;gap:6px;margin-bottom:10px">
+              <span style="font-size:18px">🗑️</span>
+              <div>
+                <div style="font-size:12px;font-weight:700;color:var(--t2)">Q4 — Eliminasi</div>
+                <div style="font-size:11px;color:var(--t3)">Tidak Penting, Tidak Mendesak</div>
+              </div>
+            </div>
+            <div id="q4-list" style="display:flex;flex-direction:column;gap:6px"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Rekap Stats -->
+      <div class="sg" id="matrix-stat" style="margin-top:16px"></div>
     </div>
 
     <!-- KALENDER -->
@@ -951,11 +1030,12 @@ tr:hover td{background:var(--s2)}
             <option value="">— Tanpa Project —</option>
           </select>
         </div>
-        <div class="fg"><label class="fl">Prioritas</label>
+        <div class="fg"><label class="fl">Prioritas (Eisenhower)</label>
           <select class="fsl" id="td-prio">
-            <option value="normal">📌 Normal</option>
-            <option value="high">⭐ High</option>
-            <option value="urgent">🔴 Urgent</option>
+            <option value="q1">🔥 Q1 — Penting & Mendesak (Lakukan Sekarang)</option>
+            <option value="q2">📅 Q2 — Penting, Tidak Mendesak (Jadwalkan)</option>
+            <option value="q3">🤝 Q3 — Tidak Penting, Mendesak (Delegasikan)</option>
+            <option value="q4">🗑️ Q4 — Tidak Penting & Tidak Mendesak (Eliminasi)</option>
           </select>
         </div>
       </div>
@@ -1868,7 +1948,7 @@ async function subCuti(){
   // Hitung jumlah hari
   const hari=Math.max(1,Math.round((new Date(to)-new Date(from))/86400000)+1);
   // Cek sisa cuti
-  const jatah=getJatahCuti();
+  const jatah=await getJatahUser(ME.uname);
   const used=CUTI.filter(c=>c.uname===ME.uname&&c.status==='approved').reduce((s,c)=>s+Math.max(1,Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1),0);
   const sisa=Math.max(0,jatah-used);
   if(hari>sisa){toast(`Sisa cuti kamu ${sisa} hari, tidak cukup untuk ${hari} hari ❌`,'er');return;}
@@ -1898,8 +1978,8 @@ function rCutiList() {
   ).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:16px">Belum ada cuti 🏖️</td></tr>';
   uCutiSum();
 }
-function uCutiSum() {
-  const jatah = getJatahCuti();
+async function uCutiSum() {
+  const jatah = await getJatahUser(ME.uname);
   const mine=CUTI.filter(c=>c.uname===ME.uname);
   const used=mine.filter(c=>c.status==='approved').reduce((s,c)=>s+Math.max(1,Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1),0);
   const pend=mine.filter(c=>c.status==='pending').length;
@@ -2163,6 +2243,18 @@ function getJatahCuti() {
   return parseInt(localStorage.getItem('yk26_jatah_cuti')) || 12;
 }
 
+// Cache jatah cuti per user (diisi saat loadAllData)
+let JATAH_CACHE = {};
+
+async function getJatahUser(uname) {
+  if (JATAH_CACHE[uname]) return JATAH_CACHE[uname];
+  try {
+    const rows = await sbGet('jatah_cuti', 'uname=eq.'+encodeURIComponent(uname)+'&limit=1');
+    if (rows.length) { JATAH_CACHE[uname] = rows[0].jatah; return rows[0].jatah; }
+  } catch(e) {}
+  return getJatahCuti(); // fallback ke default
+}
+
 // ─── APPROVE CUTI WITH DOKUMEN ───
 let apvCutiFileData = null;
 let currentApvCutiId = null;
@@ -2263,11 +2355,19 @@ function lihatDokCuti(id, jenis='pengajuan') {
 
 async function rCutiSummary() {
   const tb = $('sd-cuti-summary'); if(!tb) return;
-  const jatah = getJatahCuti();
-  // Update input jatah
-  const ji = $('jatah-cuti'); if(ji) ji.value = jatah;
+  const defaultJatah = getJatahCuti();
+  const ji = $('jatah-cuti'); if(ji) ji.value = defaultJatah;
+
+  // Load jatah custom per orang dari Supabase
+  let jatahCustom = {};
+  try {
+    const rows = await sbGet('jatah_cuti', 'select=*');
+    rows.forEach(r => { jatahCustom[r.uname] = r.jatah; });
+  } catch(e) {}
+
   const allUsers = Object.values(U).filter(u => u.role !== 'superManager' && u.status === 'active');
   tb.innerHTML = allUsers.map(u => {
+    const jatah = jatahCustom[u.uname] || defaultJatah;
     const userCuti = CUTI.filter(c => c.uname === u.uname);
     const used = userCuti.filter(c => c.status === 'approved').reduce((s,c) => {
       return s + Math.max(1, Math.round((new Date(c.sampai)-new Date(c.dari))/86400000)+1);
@@ -2279,7 +2379,15 @@ async function rCutiSummary() {
       <td><b>${sx(u.nama)}</b></td>
       <td><span class="uc">@${sx(u.uname)}</span></td>
       <td>${DM[u.div]||u.div}</td>
-      <td>${jatah} hari</td>
+      <td>
+        <div style="display:flex;align-items:center;gap:5px">
+          <input type="number" value="${jatah}" min="1" max="60"
+            style="width:52px;padding:3px 6px;font-size:12px;border:1px solid var(--b2);border-radius:6px;text-align:center;background:var(--s)"
+            onchange="saveJatahCuti('${u.uname}',this.value)"
+            title="Edit jatah cuti @${sx(u.uname)}">
+          <span style="font-size:11px;color:var(--t3)">hari</span>
+        </div>
+      </td>
       <td>
         <div style="display:flex;align-items:center;gap:7px">
           <div style="flex:1;height:6px;background:var(--b);border-radius:3px;min-width:60px">
@@ -2292,6 +2400,19 @@ async function rCutiSummary() {
       <td>${pending>0?`<span class="bdg bwa">⏳ ${pending}</span>`:'<span style="color:var(--t3);font-size:12px">-</span>'}</td>
     </tr>`;
   }).join('') || '<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:16px">Belum ada karyawan aktif</td></tr>';
+}
+
+async function saveJatahCuti(uname, val) {
+  const jatah = parseInt(val);
+  if (isNaN(jatah) || jatah < 1) return;
+  // Cek apakah sudah ada
+  const existing = await sbGet('jatah_cuti', 'uname=eq.'+encodeURIComponent(uname)+'&limit=1');
+  if (existing.length) {
+    await sbUpdate('jatah_cuti', {uname}, {jatah});
+  } else {
+    await sbInsert('jatah_cuti', {uname, jatah});
+  }
+  toast('Jatah cuti @'+uname+' diubah ke '+jatah+' hari 💾','ok');
 }
 
 function rSDcuti(){
@@ -2608,6 +2729,62 @@ function updProjDropdowns() {
   if($('td-proj-filter')) $('td-proj-filter').innerHTML = fopts;
 }
 
+
+// ═══════════════════════════════════════════
+// EISENHOWER MATRIX
+// ═══════════════════════════════════════════
+function rMatrix() {
+  const myTodos = TODOS.filter(t =>
+    t.status !== 'done' &&
+    (t.owner === ME.uname || (t.members && t.members.includes(ME.uname)))
+  );
+
+  // Map priority ke quadrant
+  const qMap = { q1:'q1', q2:'q2', q3:'q3', q4:'q4',
+    urgent:'q1', high:'q2', normal:'q2' }; // backward compat
+
+  const quads = {q1:[], q2:[], q3:[], q4:[]};
+  myTodos.forEach(t => {
+    const q = qMap[t.priority] || 'q2';
+    quads[q].push(t);
+  });
+
+  ['q1','q2','q3','q4'].forEach(q => {
+    const el = $(q+'-list'); if(!el) return;
+    el.innerHTML = quads[q].map(t => {
+      const proj = PROJS.find(p=>p.id===t.project_id);
+      const dl = t.deadline ? new Date(t.deadline) : null;
+      const overdue = dl && dl < new Date() && t.status !== 'done';
+      const qColors = {
+        q1:'border-color:var(--r2);background:var(--s)',
+        q2:'border-color:var(--in);background:var(--s)',
+        q3:'border-color:var(--go);background:var(--s)',
+        q4:'border-color:var(--b2);background:var(--s)'
+      };
+      return `<div style="border:1px solid;border-radius:var(--rr);padding:8px 10px;cursor:pointer;${qColors[q]}" onclick="openTodoDet('${t.id}')">
+        <div style="font-size:13px;font-weight:600;color:var(--t);margin-bottom:3px">${sx(t.judul)}</div>
+        <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:3px">
+          ${proj?`<span style="font-size:10px;font-weight:700;color:${proj.color}">📁 ${sx(proj.nama)}</span>`:'<span></span>'}
+          ${dl?`<span style="font-size:10px;font-weight:600;color:${overdue?'var(--er)':'var(--t3)'}">📅 ${dl.toLocaleDateString('id-ID',{day:'numeric',month:'short'})}</span>`:''}
+        </div>
+      </div>`;
+    }).join('') || `<div style="text-align:center;font-size:12px;color:var(--t3);padding:16px 0;opacity:.6">Tidak ada tugas</div>`;
+  });
+
+  // Rekap stats
+  const stat = $('matrix-stat'); if(!stat) return;
+  const total = myTodos.length || 1;
+  const qLabels = {q1:'🔥 Q1 Lakukan',q2:'📅 Q2 Jadwalkan',q3:'🤝 Q3 Delegasi',q4:'🗑️ Q4 Eliminasi'};
+  const qColors2 = {q1:'var(--r2)',q2:'var(--in)',q3:'var(--go)',q4:'var(--t3)'};
+  stat.innerHTML = Object.entries(quads).map(([q,items])=>`
+    <div class="sc">
+      <div class="sl">${qLabels[q]}</div>
+      <div class="sv" style="color:${qColors2[q]}">${items.length}</div>
+      <div class="ss2">${Math.round(items.length/total*100)}% dari total tugas</div>
+      <div class="sic">${{q1:'🔥',q2:'📅',q3:'🤝',q4:'🗑️'}[q]}</div>
+    </div>`).join('');
+}
+
 function rKanban() {
   const fProj = $('td-proj-filter') ? $('td-proj-filter').value : '';
   let todos = TODOS.filter(t => !fProj || t.project_id === fProj);
@@ -2631,7 +2808,8 @@ function renderKcard(t) {
   const dlClass = overdue ? 'er' : soon ? 'wa' : 'ok';
   const dlText = dl ? dl.toLocaleDateString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
   const proj = PROJS.find(p=>p.id===t.project_id);
-  const prio = {normal:'',high:'⭐ ',urgent:'🔴 '}[t.priority]||'';
+  const prioMap = {q1:'🔥 ',q2:'📅 ',q3:'🤝 ',q4:'🗑️ ',urgent:'🔥 ',high:'📅 ',normal:'📅 '};
+  const prio = prioMap[t.priority]||'';
   return `<div class="kcard${t.status==='done'?' done-card':''}" onclick="openTodoDet('${t.id}')">
     <div class="kt">
       <input type="checkbox" ${t.status==='done'?'checked':''} onclick="event.stopPropagation();toggleTodo('${t.id}')" style="margin-top:2px;accent-color:var(--r2)">
@@ -2662,7 +2840,15 @@ function openTodoDet(id) {
     <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-bottom:14px">
       <span style="color:var(--t3)">Judul</span><span style="font-weight:600">${sx(t.judul)}</span>
       <span style="color:var(--t3)">Status</span><span>${t.status==='done'?'<span class="bdg bok">✅ Selesai</span>':t.status==='inprogress'?'<span class="bdg bin">🔄 In Progress</span>':'<span class="bdg bne">📋 To Do</span>'}</span>
-      <span style="color:var(--t3)">Prioritas</span><span>${{normal:'📌 Normal',high:'⭐ High',urgent:'🔴 Urgent'}[t.priority]||'-'}</span>
+      <span style="color:var(--t3)">Prioritas</span><span>${{
+        q1:'🔥 Q1 — Penting & Mendesak',
+        q2:'📅 Q2 — Penting, Tidak Mendesak',
+        q3:'🤝 Q3 — Tidak Penting, Mendesak',
+        q4:'🗑️ Q4 — Tidak Penting & Tidak Mendesak',
+        urgent:'🔥 Q1 — Penting & Mendesak',
+        high:'📅 Q2 — Penting, Tidak Mendesak',
+        normal:'📅 Q2 — Normal'
+      }[t.priority]||'-'}</span>
       <span style="color:var(--t3)">Deadline</span><span style="font-weight:600">${dl}</span>
       <span style="color:var(--t3)">Project</span><span>${proj?`<span class="proj-chip" style="background:${proj.color}22;color:${proj.color};border-color:${proj.color}44">📁 ${sx(proj.nama)}</span>`:'-'}</span>
       <span style="color:var(--t3)">Pembuat</span><span><span class="uc">@${sx(t.owner)}</span></span>
