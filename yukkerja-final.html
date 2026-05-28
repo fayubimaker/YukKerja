@@ -208,6 +208,26 @@ tr:hover td{background:var(--s2)}
 .slb{font-size:10px;color:var(--t3)}
 .stp .s.dn .slb{color:var(--ok)}.stp .s.ac .slb{color:var(--r2);font-weight:600}
 .sbdg{display:inline-flex;align-items:center;gap:4px;font-size:11px;color:var(--ok);background:var(--okb);border-radius:20px;padding:2px 8px;font-weight:600}
+.kcard{background:var(--s);border:1px solid var(--b);border-radius:var(--rr);padding:11px 13px;cursor:pointer;transition:all .2s}
+.kcard:hover{box-shadow:var(--shm);border-color:var(--b2)}
+.kcard.done-card{opacity:.65}
+.kcard .kt{font-size:13px;font-weight:600;color:var(--t);margin-bottom:4px;display:flex;align-items:flex-start;gap:7px}
+.kcard .kd{font-size:11px;color:var(--t3);margin-bottom:7px}
+.kcard .km{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:4px}
+.kcard .kdl{font-size:11px;font-weight:600}
+.kdl.ok{color:var(--ok)}.kdl.wa{color:var(--wa)}.kdl.er{color:var(--er)}
+.cal-grid-wrap{display:grid;gap:0}
+.cal-cell{min-height:90px;border:0.5px solid var(--b);padding:6px;position:relative;background:var(--s)}
+.cal-cell.other-month{background:var(--s2);opacity:.55}
+.cal-cell.today{background:var(--rl)}
+.cal-day-num{font-size:12px;font-weight:700;color:var(--t2);margin-bottom:4px}
+.cal-cell.today .cal-day-num{color:var(--r2)}
+.cal-ev{font-size:11px;font-weight:600;padding:2px 6px;border-radius:4px;margin-bottom:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;cursor:pointer}
+.proj-chip{display:inline-flex;align-items:center;gap:4px;padding:3px 9px;border-radius:20px;font-size:11px;font-weight:700;border:1px solid}
+.mem-toggle{display:flex;align-items:center;gap:6px;padding:5px 9px;background:var(--s2);border:1px solid var(--b);border-radius:var(--rr);cursor:pointer;font-size:12px;font-weight:600;transition:all .2s;user-select:none}
+.mem-toggle.sel{background:var(--rl);border-color:var(--r2);color:var(--r2)}
+.dir-bar{background:var(--b);border-radius:4px;height:10px;overflow:hidden;margin-top:4px}
+.dir-bar-fill{height:100%;border-radius:4px;background:var(--r2);transition:width .4s}
 .upbox{display:flex;align-items:center;gap:7px;background:rgba(255,255,255,.06);border:1px solid rgba(255,255,255,.12);border-radius:var(--rr);padding:9px 12px;margin-bottom:11px;font-size:12px;color:rgba(255,255,255,.35);display:flex;gap:7px}
 @media(max-width:640px){.fr{grid-template-columns:1fr}.arow{grid-template-columns:1fr}.ct2{font-size:32px}.sg{grid-template-columns:1fr 1fr}}
 </style>
@@ -581,6 +601,180 @@ tr:hover td{background:var(--s2)}
   </div>
 </div>
 
+
+  <!-- TO DO / KANBAN ─────────────────────────────── -->
+  <div class="pg" id="pg-todo">
+    <div class="ptit">📋 To Do & Project</div>
+    <div class="psub">Kelola tugas dan project tim kamu</div>
+    <div class="it">
+      <div class="itb on" onclick="sit('td','td-kanban',this);rKanban()">🗂️ Kanban</div>
+      <div class="itb" onclick="sit('td','td-cal',this);rCal()">📅 Kalender</div>
+    </div>
+
+    <!-- KANBAN -->
+    <div id="td-kanban">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="display:flex;gap:7px;flex-wrap:wrap">
+          <button class="btn bp sm" onclick="openM('m-todo')">➕ Tambah Tugas</button>
+          <button class="btn bs sm" onclick="openM('m-project')">📁 Buat Project</button>
+        </div>
+        <div style="display:flex;gap:7px;align-items:center">
+          <label style="font-size:12px;color:var(--t2)">Filter Project:</label>
+          <select class="fsl" id="td-proj-filter" style="width:auto;padding:5px 9px;font-size:12px" onchange="rKanban()">
+            <option value="">Semua</option>
+          </select>
+        </div>
+      </div>
+      <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:14px;min-height:400px" id="kanban-board">
+        <div class="kanban-col" id="col-todo" data-status="todo">
+          <div class="kc-head" style="background:var(--s2);border-radius:var(--rl2) var(--rl2) 0 0;padding:11px 14px;border:1px solid var(--b);border-bottom:none;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:700;font-size:13px">📋 To Do</span><span class="bdg bne" id="cnt-todo">0</span>
+          </div>
+          <div id="cards-todo" style="background:var(--s2);border:1px solid var(--b);border-top:none;border-radius:0 0 var(--rl2) var(--rl2);padding:10px;min-height:300px;display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <div class="kanban-col" id="col-inprogress" data-status="inprogress">
+          <div class="kc-head" style="background:#EFF8FF;border-radius:var(--rl2) var(--rl2) 0 0;padding:11px 14px;border:1px solid var(--b);border-bottom:none;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:700;font-size:13px;color:var(--in)">🔄 In Progress</span><span class="bdg bin" id="cnt-inprogress">0</span>
+          </div>
+          <div id="cards-inprogress" style="background:#EFF8FF;border:1px solid var(--b);border-top:none;border-radius:0 0 var(--rl2) var(--rl2);padding:10px;min-height:300px;display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+        <div class="kanban-col" id="col-done" data-status="done">
+          <div class="kc-head" style="background:var(--okb);border-radius:var(--rl2) var(--rl2) 0 0;padding:11px 14px;border:1px solid var(--b);border-bottom:none;display:flex;justify-content:space-between;align-items:center">
+            <span style="font-weight:700;font-size:13px;color:var(--ok)">✅ Selesai</span><span class="bdg bok" id="cnt-done">0</span>
+          </div>
+          <div id="cards-done" style="background:var(--okb);border:1px solid var(--b);border-top:none;border-radius:0 0 var(--rl2) var(--rl2);padding:10px;min-height:300px;display:flex;flex-direction:column;gap:8px"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- KALENDER -->
+    <div id="td-cal" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="display:flex;gap:5px">
+          <button class="btn bs sm" onclick="setCv('month')" id="cv-month">Bulan</button>
+          <button class="btn bs sm" onclick="setCv('week')" id="cv-week">Minggu</button>
+          <button class="btn bs sm" onclick="setCv('day')" id="cv-day">Hari</button>
+        </div>
+        <div style="display:flex;gap:7px;align-items:center">
+          <button class="btn bs sm" onclick="navCal(-1)">←</button>
+          <span id="cal-title" style="font-size:14px;font-weight:600;min-width:160px;text-align:center"></span>
+          <button class="btn bs sm" onclick="navCal(1)">→</button>
+          <button class="btn bs sm" onclick="calToday()">Hari ini</button>
+        </div>
+      </div>
+      <div class="card" style="padding:0;overflow:hidden">
+        <div id="cal-grid" style="min-height:400px"></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- DIREKSI DASHBOARD ─────────────────────────── -->
+  <div class="pg" id="pg-direksi_dash">
+    <div class="ptit">🏛️ Dashboard Direksi</div>
+    <div class="psub">Laporan menyeluruh aktivitas perusahaan</div>
+    <div class="sg" id="dir-stat"></div>
+
+    <div class="it">
+      <div class="itb on" onclick="sit('dir','dir-overview',this)">📊 Overview</div>
+      <div class="itb" onclick="sit('dir','dir-absen',this);rDirAbs()">🕐 Absensi</div>
+      <div class="itb" onclick="sit('dir','dir-pj',this)">💸 Pengajuan</div>
+      <div class="itb" onclick="sit('dir','dir-project',this)">📁 Project</div>
+      <div class="itb" onclick="sit('dir','dir-umumkan',this)">📢 Pengumuman</div>
+    </div>
+
+    <!-- OVERVIEW -->
+    <div id="dir-overview">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
+        <div class="card">
+          <div class="ch"><span class="ct">👥 Karyawan per Divisi</span></div>
+          <div class="cb" id="dir-emp-div"></div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">💸 Status Pengajuan</span></div>
+          <div class="cb" id="dir-pj-chart"></div>
+        </div>
+      </div>
+      <div class="card" style="margin-top:14px">
+        <div class="ch"><span class="ct">📋 Daftar Karyawan</span></div>
+        <div class="cb tw">
+          <table><thead><tr><th>Nama</th><th>Username</th><th>Divisi</th><th>Role</th><th>Bergabung</th></tr></thead>
+          <tbody id="dir-emp-list"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- ABSENSI DIREKSI -->
+    <div id="dir-absen" style="display:none">
+      <div class="card">
+        <div class="ch">
+          <span class="ct">🕐 Rekap Absensi</span>
+          <div style="display:flex;gap:7px;flex-wrap:wrap">
+            <input class="fi" type="date" id="dir-abs-tgl" style="width:auto;padding:5px 9px;font-size:12px" onchange="rDirAbs()">
+            <input class="fi" id="dir-abs-q" placeholder="Cari..." style="width:130px;padding:5px 9px;font-size:12px" oninput="rDirAbs()">
+            <button class="btn bp sm" onclick="rDirAbs()">🔍</button>
+          </div>
+        </div>
+        <div class="cb tw">
+          <table><thead><tr><th>Nama</th><th>Username</th><th>Tanggal</th><th>Clock In</th><th>Clock Out</th><th>Tipe</th><th>Lokasi</th><th>Status</th></tr></thead>
+          <tbody id="dir-abs-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PENGAJUAN DIREKSI -->
+    <div id="dir-pj" style="display:none">
+      <div class="sg" id="dir-pj-stat" style="margin-bottom:14px"></div>
+      <div class="card">
+        <div class="ch"><span class="ct">💸 Semua Pengajuan</span>
+          <select class="fsl" id="dir-pj-filter" style="padding:5px 9px;font-size:12px;width:auto" onchange="rDirPJ()">
+            <option value="">Semua Status</option>
+            <option value="pending">Pending</option><option value="approved_spv">Disetujui SPV</option>
+            <option value="approved_mgr">Disetujui Manager</option><option value="approved">Final Disetujui</option>
+            <option value="paid">Dibayar</option><option value="rejected">Ditolak</option>
+          </select>
+        </div>
+        <div class="cb tw">
+          <table><thead><tr><th>ID</th><th>Pemohon</th><th>Keperluan</th><th>Total</th><th>Klasifikasi</th><th>Status</th><th>Tanggal</th></tr></thead>
+          <tbody id="dir-pj-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- PROJECT DIREKSI -->
+    <div id="dir-project" style="display:none">
+      <div class="card">
+        <div class="ch"><span class="ct">📁 Semua Project Tim</span></div>
+        <div class="cb" id="dir-project-list"><div class="emp"><span class="e">📁</span><p>Belum ada project</p></div></div>
+      </div>
+    </div>
+
+    <!-- PENGUMUMAN -->
+    <div id="dir-umumkan" style="display:none">
+      <div class="card">
+        <div class="ch"><span class="ct">📢 Kirim Pengumuman</span></div>
+        <div class="cb">
+          <div class="fg"><label class="fl">Judul Pengumuman</label><input class="fi" id="umu-jd" placeholder="Judul pengumuman..."></div>
+          <div class="fg"><label class="fl">Isi Pengumuman</label><textarea class="fta" id="umu-isi" placeholder="Tulis pengumuman di sini..." style="min-height:120px"></textarea></div>
+          <div class="fr">
+            <div class="fg"><label class="fl">Target</label>
+              <select class="fsl" id="umu-to">
+                <option value="all">👥 Semua Karyawan</option>
+                <option value="FAT">💼 FAT</option><option value="MKT">📣 Marketing</option>
+                <option value="STR">🏪 Store</option><option value="PD">🛠️ Produk & Development</option>
+              </select>
+            </div>
+            <div class="fg"><label class="fl">Prioritas</label>
+              <select class="fsl" id="umu-pr"><option value="normal">📌 Normal</option><option value="urgent">🔴 Urgent</option></select>
+            </div>
+          </div>
+          <div style="display:flex;justify-content:flex-end"><button class="btn bp" onclick="kirimUmuman()">📢 Kirim Pengumuman</button></div>
+          <div id="umu-hist" style="margin-top:18px"></div>
+        </div>
+      </div>
+    </div>
+  </div>
+
 <!-- MODALS -->
 <div class="mo" id="m-cuti"><div class="mdl">
   <div class="mh"><div class="mt">🏖️ Ajukan Cuti</div><button class="mc" onclick="closeM('m-cuti')">✕</button></div>
@@ -743,6 +937,82 @@ tr:hover td{background:var(--s2)}
   </div>
 </div>
 
+
+<!-- Modal Tambah Tugas -->
+<div class="mo" id="m-todo">
+  <div class="mdl" style="max-width:500px">
+    <div class="mh"><div class="mt">➕ Tambah Tugas</div><button class="mc" onclick="closeM('m-todo')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Judul Tugas</label><input class="fi" id="td-judul" placeholder="Judul tugas..."></div>
+      <div class="fg"><label class="fl">Deskripsi</label><textarea class="fta" id="td-desk" placeholder="Deskripsi detail..." style="min-height:70px"></textarea></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">Project</label>
+          <select class="fsl" id="td-proj">
+            <option value="">— Tanpa Project —</option>
+          </select>
+        </div>
+        <div class="fg"><label class="fl">Prioritas</label>
+          <select class="fsl" id="td-prio">
+            <option value="normal">📌 Normal</option>
+            <option value="high">⭐ High</option>
+            <option value="urgent">🔴 Urgent</option>
+          </select>
+        </div>
+      </div>
+      <div class="fr">
+        <div class="fg"><label class="fl">📅 Deadline</label><input class="fi" type="datetime-local" id="td-dl"></div>
+        <div class="fg"><label class="fl">⏰ Pengingat</label>
+          <select class="fsl" id="td-remind">
+            <option value="">Tidak ada</option>
+            <option value="30">30 menit sebelum</option>
+            <option value="60">1 jam sebelum</option>
+            <option value="1440">1 hari sebelum</option>
+            <option value="2880">2 hari sebelum</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">👥 Assign ke</label>
+        <div id="td-assign-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="closeM('m-todo')">Batal</button><button class="btn bp" onclick="subTodo()">➕ Tambah</button></div>
+  </div>
+</div>
+
+<!-- Modal Buat Project -->
+<div class="mo" id="m-project">
+  <div class="mdl" style="max-width:460px">
+    <div class="mh"><div class="mt">📁 Buat Project Baru</div><button class="mc" onclick="closeM('m-project')">✕</button></div>
+    <div class="mb">
+      <div class="fg"><label class="fl">Nama Project</label><input class="fi" id="pj2-nama" placeholder="Nama project..."></div>
+      <div class="fg"><label class="fl">Deskripsi</label><textarea class="fta" id="pj2-desk" placeholder="Tentang project ini..." style="min-height:70px"></textarea></div>
+      <div class="fr">
+        <div class="fg"><label class="fl">📅 Deadline</label><input class="fi" type="date" id="pj2-dl"></div>
+        <div class="fg"><label class="fl">Warna</label>
+          <select class="fsl" id="pj2-color">
+            <option value="#8B0000">🔴 Merah</option><option value="#1A6B9A">🔵 Biru</option>
+            <option value="#15803D">🟢 Hijau</option><option value="#C8963E">🟡 Kuning</option>
+            <option value="#7C3AED">🟣 Ungu</option>
+          </select>
+        </div>
+      </div>
+      <div class="fg"><label class="fl">👥 Undang Anggota</label>
+        <div id="pj2-member-list" style="display:flex;flex-wrap:wrap;gap:6px;margin-top:4px"></div>
+      </div>
+    </div>
+    <div class="mf"><button class="btn bs" onclick="closeM('m-project')">Batal</button><button class="btn bp" onclick="subProject()">📁 Buat Project</button></div>
+  </div>
+</div>
+
+<!-- Modal Detail Todo -->
+<div class="mo" id="m-todo-det">
+  <div class="mdl" style="max-width:480px">
+    <div class="mh"><div class="mt">📋 Detail Tugas</div><button class="mc" onclick="closeM('m-todo-det')">✕</button></div>
+    <div class="mb" id="m-todo-det-b"></div>
+    <div class="mf" id="m-todo-det-f"></div>
+  </div>
+</div>
+
 <!-- Modal Approve Cuti dengan Dokumen -->
 <div class="mo" id="m-apvcuti">
   <div class="mdl" style="max-width:480px">
@@ -788,7 +1058,7 @@ tr:hover td{background:var(--s2)}
 <div class="mo" id="m-role"><div class="mdl" style="max-width:380px">
   <div class="mh"><div class="mt">⚙️ Ubah Role</div><button class="mc" onclick="closeM('m-role')">✕</button></div>
   <div class="mb"><div id="ri" style="background:var(--s2);border-radius:var(--rr);padding:11px;margin-bottom:13px;font-size:13px"></div>
-    <div class="fg"><label class="fl">Role Baru</label><select class="fsl" id="rsel"><option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option><option value="kasir_finance">💳 Kasir Finance</option></select></div>
+    <div class="fg"><label class="fl">Role Baru</label><select class="fsl" id="rsel"><option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option><option value="kasir_finance">💳 Kasir Finance</option><option value="direksi">🏛️ Direksi</option></select></div>
   </div>
   <div class="mf"><button class="btn bs" onclick="closeM('m-role')">Batal</button><button class="btn bp" onclick="saveRole()">💾 Simpan</button></div>
 </div></div>
@@ -924,8 +1194,8 @@ let U={}, PEND=[], PJ=[], CUTI=[], ABS=[], NOTIF=[], CMDS=[], KASH=[], KACC={};
 let ME=null, tolakId=null, bayarId=null, roleUid=null, iCnt=0, cind=false;
 
 const DM = {FAT:'FAT',MKT:'Marketing',STR:'Store',PD:'Produk & Development'};
-const EM = {superManager:'👑',manager:'🎯',supervisor:'🔍',staff:'🙋',kasir:'💰',kasir_finance:'💳'};
-const RL = {superManager:'Super Manager',manager:'Manager',supervisor:'Supervisor',staff:'Staff',kasir:'Kasir',kasir_finance:'Kasir Finance'};
+const EM = {superManager:'👑',direksi:'🏛️',manager:'🎯',supervisor:'🔍',staff:'🙋',kasir:'💰',kasir_finance:'💳'};
+const RL = {superManager:'Super Manager',direksi:'Direksi',manager:'Manager',supervisor:'Supervisor',staff:'Staff',kasir:'Kasir',kasir_finance:'Kasir Finance'};
 
 function load() {
   U    = LS('u',{});   PEND = LS('pend',[]);
@@ -1449,12 +1719,13 @@ function setupApp() {
 }
 
 const NAVCFG = {
-  superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir']],
-  manager:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['approval','✅ Persetujuan']],
-  supervisor:    [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['approval','✅ Persetujuan']],
-  staff:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan']],
-  kasir_finance: [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['kasir','💰 Kasir']],
-  kasir:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['kasir','💰 Kasir']],
+  superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir']],
+  direksi:       [['dashboard','🏠 Beranda'],['todo','📋 To Do'],['direksi_dash','🏛️ Dashboard Direksi']],
+  manager:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
+  supervisor:    [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
+  staff:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do']],
+  kasir_finance: [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['kasir','💰 Kasir']],
+  kasir:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['kasir','💰 Kasir']],
 };
 function buildNav() {
   const tabs = NAVCFG[ME.role]||NAVCFG.staff;
@@ -1473,6 +1744,8 @@ function goPage(id) {
   if(id==='kasir')     rKasir();
   if(id==='cuti')        rCutiList();
   if(id==='rekap_absensi') rRekapAbs();
+  if(id==='todo')        { loadTodos(); setCv('month'); }
+  if(id==='direksi_dash'){ rDirDash(); loadTodos(); }
 }
 
 // ═══════════════════════════════════════════
@@ -1813,7 +2086,7 @@ function rUsers(){
       </div>
       <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
         <select class="fsl" id="rs-${u.email.replace(/[@.]/g,'_')}" style="padding:4px 8px;font-size:12px;width:auto">
-          <option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option><option value="kasir_finance">💳 Kasir Finance</option>
+          <option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option><option value="kasir_finance">💳 Kasir Finance</option><option value="direksi">🏛️ Direksi</option>
         </select>
         <button class="btn bg sm" onclick="apvU('${u.email}')">✅ Setujui</button>
         <button class="btn bd sm" onclick="rejU('${u.email}')">❌ Tolak</button>
@@ -2295,7 +2568,11 @@ function sit(grp,target,btn){
 // ═══════════════════════════════════════════
 // MODAL
 // ═══════════════════════════════════════════
-const openM  = id => $(id).classList.add('on');
+const openM = id => {
+  $(id).classList.add('on');
+  if(id==='m-todo') buildMemberToggles('td-assign-list');
+  if(id==='m-project') buildMemberToggles('pj2-member-list');
+};
 const closeM = id => $(id).classList.remove('on');
 document.querySelectorAll('.mo').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('on');}));
 
@@ -2310,6 +2587,424 @@ function sbdg(s){return({
   rejected:     '<span class="bdg ber">❌ Ditolak</span>',
   paid:         '<span class="bdg bin">💳 Dibayar</span>',
 }[s]||'<span class="bdg bne">'+s+'</span>');}
+
+
+// ═══════════════════════════════════════════
+// TODO & PROJECT
+// ═══════════════════════════════════════════
+let TODOS = [], PROJS = [];
+let calView = 'month', calDate = new Date(), editTodoId = null;
+
+async function loadTodos() {
+  TODOS = await sbGet('todos','order=created_at.desc&limit=500');
+  PROJS = await sbGet('projects','order=created_at.desc&limit=200');
+  rKanban(); updProjDropdowns();
+}
+
+function updProjDropdowns() {
+  const opts = '<option value="">— Tanpa Project —</option>' + PROJS.map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
+  if($('td-proj')) $('td-proj').innerHTML = opts;
+  const fopts = '<option value="">Semua</option>' + PROJS.map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
+  if($('td-proj-filter')) $('td-proj-filter').innerHTML = fopts;
+}
+
+function rKanban() {
+  const fProj = $('td-proj-filter') ? $('td-proj-filter').value : '';
+  let todos = TODOS.filter(t => !fProj || t.project_id === fProj);
+  // Mine + assigned
+  todos = todos.filter(t => t.owner === ME.uname || (t.members && t.members.includes(ME.uname)));
+
+  ['todo','inprogress','done'].forEach(st => {
+    const col = $('cards-'+st); if(!col) return;
+    const items = todos.filter(t => t.status === st);
+    $('cnt-'+st).textContent = items.length;
+    col.innerHTML = items.map(t => renderKcard(t)).join('') ||
+      '<div style="text-align:center;color:var(--t3);font-size:12px;padding:20px 0">Tidak ada tugas</div>';
+  });
+}
+
+function renderKcard(t) {
+  const dl = t.deadline ? new Date(t.deadline) : null;
+  const now = new Date();
+  const overdue = dl && dl < now && t.status !== 'done';
+  const soon = dl && !overdue && (dl - now) < 86400000;
+  const dlClass = overdue ? 'er' : soon ? 'wa' : 'ok';
+  const dlText = dl ? dl.toLocaleDateString('id-ID',{day:'numeric',month:'short',hour:'2-digit',minute:'2-digit'}) : '';
+  const proj = PROJS.find(p=>p.id===t.project_id);
+  const prio = {normal:'',high:'⭐ ',urgent:'🔴 '}[t.priority]||'';
+  return `<div class="kcard${t.status==='done'?' done-card':''}" onclick="openTodoDet('${t.id}')">
+    <div class="kt">
+      <input type="checkbox" ${t.status==='done'?'checked':''} onclick="event.stopPropagation();toggleTodo('${t.id}')" style="margin-top:2px;accent-color:var(--r2)">
+      <span style="${t.status==='done'?'text-decoration:line-through;color:var(--t3)':''}">${prio}${sx(t.judul)}</span>
+    </div>
+    ${t.desk?`<div class="kd">${sx(t.desk).substring(0,60)}${t.desk.length>60?'...':''}</div>`:''}
+    <div class="km">
+      ${proj?`<span class="proj-chip" style="background:${proj.color}22;color:${proj.color};border-color:${proj.color}44">📁 ${sx(proj.nama)}</span>`:'<span></span>'}
+      ${dl?`<span class="kdl ${dlClass}">📅 ${dlText}</span>`:''}
+    </div>
+    ${t.members&&t.members.length?`<div style="margin-top:6px;display:flex;gap:3px;flex-wrap:wrap">${t.members.map(m=>`<span class="uc" style="font-size:10px;padding:1px 6px">@${sx(m)}</span>`).join('')}</div>`:''}
+  </div>`;
+}
+
+async function toggleTodo(id) {
+  const t = TODOS.find(x=>x.id===id); if(!t)return;
+  t.status = t.status==='done' ? 'todo' : 'done';
+  await sbUpdate('todos',{id},{status:t.status});
+  rKanban();
+}
+
+function openTodoDet(id) {
+  editTodoId = id;
+  const t = TODOS.find(x=>x.id===id); if(!t)return;
+  const proj = PROJS.find(p=>p.id===t.project_id);
+  const dl = t.deadline ? new Date(t.deadline).toLocaleString('id-ID') : '-';
+  $('m-todo-det-b').innerHTML = `
+    <div style="display:grid;grid-template-columns:auto 1fr;gap:6px 14px;font-size:13px;margin-bottom:14px">
+      <span style="color:var(--t3)">Judul</span><span style="font-weight:600">${sx(t.judul)}</span>
+      <span style="color:var(--t3)">Status</span><span>${t.status==='done'?'<span class="bdg bok">✅ Selesai</span>':t.status==='inprogress'?'<span class="bdg bin">🔄 In Progress</span>':'<span class="bdg bne">📋 To Do</span>'}</span>
+      <span style="color:var(--t3)">Prioritas</span><span>${{normal:'📌 Normal',high:'⭐ High',urgent:'🔴 Urgent'}[t.priority]||'-'}</span>
+      <span style="color:var(--t3)">Deadline</span><span style="font-weight:600">${dl}</span>
+      <span style="color:var(--t3)">Project</span><span>${proj?`<span class="proj-chip" style="background:${proj.color}22;color:${proj.color};border-color:${proj.color}44">📁 ${sx(proj.nama)}</span>`:'-'}</span>
+      <span style="color:var(--t3)">Pembuat</span><span><span class="uc">@${sx(t.owner)}</span></span>
+      ${t.members&&t.members.length?`<span style="color:var(--t3)">Anggota</span><span>${t.members.map(m=>`<span class="uc" style="font-size:11px">@${sx(m)}</span>`).join(' ')}</span>`:''}
+    </div>
+    ${t.desk?`<div style="background:var(--s2);border-radius:var(--rr);padding:11px;font-size:13px;color:var(--t2)">${sx(t.desk)}</div>`:''}`;
+  $('m-todo-det-f').innerHTML = `
+    <button class="btn bs" onclick="closeM('m-todo-det')">Tutup</button>
+    ${t.status!=='inprogress'?`<button class="btn bs" onclick="moveTodo('${id}','inprogress')">🔄 In Progress</button>`:''}
+    ${t.status!=='done'?`<button class="btn bg" onclick="moveTodo('${id}','done')">✅ Selesai</button>`:''}
+    <button class="btn bd" onclick="delTodo('${id}')">🗑️ Hapus</button>`;
+  openM('m-todo-det');
+}
+
+async function moveTodo(id, status) {
+  const t=TODOS.find(x=>x.id===id);if(!t)return;
+  t.status=status; await sbUpdate('todos',{id},{status});
+  closeM('m-todo-det'); rKanban(); toast('Status diperbarui ✅','ok');
+}
+
+async function delTodo(id) {
+  if(!confirm('Hapus tugas ini?'))return;
+  await sbDelete('todos',{id});
+  TODOS=TODOS.filter(x=>x.id!==id);
+  closeM('m-todo-det'); rKanban(); toast('Tugas dihapus 🗑️','wa');
+}
+
+function buildMemberToggles(containerId) {
+  const el=$(containerId); if(!el)return;
+  el.innerHTML = Object.values(U).filter(u=>u.uname!==ME.uname&&u.status==='active').map(u=>
+    `<div class="mem-toggle" data-uname="${u.uname}" onclick="this.classList.toggle('sel')">
+      ${EM[u.role]||'👤'} @${sx(u.uname)}
+    </div>`).join('');
+}
+
+
+function getSelMembers(containerId) {
+  const el=$(containerId); if(!el)return[];
+  return [...el.querySelectorAll('.mem-toggle.sel')].map(e=>e.dataset?e.getAttribute('onclick').match(/'([^']+)'$/)[1]:'');
+}
+
+async function subTodo() {
+  const judul=$('td-judul').value.trim(), desk=$('td-desk').value.trim();
+  const proj=$('td-proj').value, prio=$('td-prio').value;
+  const dl=$('td-dl').value, remind=$('td-remind').value;
+  if(!judul){toast('Isi judul tugas 📝','wa');return;}
+  const members=[...document.querySelectorAll('#td-assign-list .mem-toggle.sel')].map(e=>{
+    const m=e.getAttribute('onclick').match(/\'([^\']+)\'\)$/);return m?m[1]:'';
+  }).filter(Boolean);
+  const data={id:'TD'+Date.now(),judul:sx(judul),desk:sx(desk),project_id:proj,priority:prio,
+    deadline:dl||null,remind_min:remind||null,status:'todo',owner:ME.uname,
+    members,created_at:new Date().toISOString()};
+  showLoading('Menyimpan tugas...');
+  await sbInsert('todos',data);
+  TODOS.unshift(data); hideLoading();
+  closeM('m-todo'); rKanban();
+  $('td-judul').value=''; $('td-desk').value='';
+  toast('Tugas ditambahkan! 📋','ok');
+  // Set reminder jika ada
+  if(dl&&remind){
+    const dlTime=new Date(dl).getTime()-parseInt(remind)*60000;
+    const diff=dlTime-Date.now();
+    if(diff>0) setTimeout(()=>toast('⏰ Pengingat: '+sx(judul)+' deadline segera!','wa'),diff);
+  }
+}
+
+async function subProject() {
+  const nama=$('pj2-nama').value.trim(), desk=$('pj2-desk').value.trim();
+  const dl=$('pj2-dl').value, color=$('pj2-color').value;
+  if(!nama){toast('Isi nama project 📝','wa');return;}
+  const members=[...document.querySelectorAll('#pj2-member-list .mem-toggle.sel')].map(e=>{
+    const m=e.getAttribute('onclick').match(/\'([^\']+)\'\)$/);return m?m[1]:'';
+  }).filter(Boolean);
+  const data={id:'PJ2-'+Date.now(),nama:sx(nama),desk:sx(desk),deadline:dl||null,color,
+    owner:ME.uname,members,created_at:new Date().toISOString()};
+  showLoading('Membuat project...');
+  await sbInsert('projects',data);
+  PROJS.unshift(data); hideLoading();
+  closeM('m-project'); updProjDropdowns(); rKanban();
+  $('pj2-nama').value=''; $('pj2-desk').value='';
+  toast('Project dibuat! 📁','ok');
+}
+
+// ─── KALENDER ───────────────────────────
+function setCv(v) {
+  calView=v;
+  ['month','week','day'].forEach(x=>{
+    const b=$('cv-'+x); if(b){b.className='btn sm'+(x===v?' bp':' bs');}
+  });
+  rCal();
+}
+
+function navCal(dir) {
+  if(calView==='month') calDate=new Date(calDate.getFullYear(),calDate.getMonth()+dir,1);
+  else if(calView==='week') calDate=new Date(calDate.getTime()+dir*7*86400000);
+  else calDate=new Date(calDate.getTime()+dir*86400000);
+  rCal();
+}
+
+function calToday(){calDate=new Date();rCal();}
+
+function getTodosForDate(d) {
+  const ds=d.toLocaleDateString('id-ID');
+  return TODOS.filter(t=>{
+    if(!t.deadline)return false;
+    const td2=new Date(t.deadline);
+    return td2.toLocaleDateString('id-ID')===ds && (t.owner===ME.uname||(t.members&&t.members.includes(ME.uname)));
+  });
+}
+
+function rCal() {
+  const grid=$('cal-grid'); if(!grid)return;
+  const tit=$('cal-title'); if(tit){
+    if(calView==='month') tit.textContent=calDate.toLocaleDateString('id-ID',{month:'long',year:'numeric'});
+    else if(calView==='week'){
+      const ws=new Date(calDate);ws.setDate(ws.getDate()-ws.getDay());
+      const we=new Date(ws);we.setDate(we.getDate()+6);
+      tit.textContent=ws.toLocaleDateString('id-ID',{day:'numeric',month:'short'})+' - '+we.toLocaleDateString('id-ID',{day:'numeric',month:'short',year:'numeric'});
+    } else tit.textContent=calDate.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'});
+  }
+
+  if(calView==='month') {
+    const yr=calDate.getFullYear(),mo=calDate.getMonth();
+    const first=new Date(yr,mo,1),last=new Date(yr,mo+1,0);
+    const startDay=first.getDay();
+    let html='<div style="display:grid;grid-template-columns:repeat(7,1fr)">'+
+      ['Min','Sen','Sel','Rab','Kam','Jum','Sab'].map(d=>`<div style="padding:8px;text-align:center;font-size:11px;font-weight:700;color:var(--t3);border:0.5px solid var(--b);background:var(--s2)">${d}</div>`).join('');
+    const today=new Date(); today.setHours(0,0,0,0);
+    // prev month padding
+    for(let i=0;i<startDay;i++){
+      const d=new Date(yr,mo,-startDay+i+1);
+      html+=`<div class="cal-cell other-month"><div class="cal-day-num">${d.getDate()}</div></div>`;
+    }
+    for(let d=1;d<=last.getDate();d++){
+      const dt=new Date(yr,mo,d); dt.setHours(0,0,0,0);
+      const isToday=dt.getTime()===today.getTime();
+      const evs=getTodosForDate(dt);
+      html+=`<div class="cal-cell${isToday?' today':''}">
+        <div class="cal-day-num">${d}</div>
+        ${evs.slice(0,3).map(t=>{
+          const proj=PROJS.find(p=>p.id===t.project_id);
+          const col=proj?proj.color:'#8B0000';
+          return `<div class="cal-ev" style="background:${col}22;color:${col}" onclick="openTodoDet('${t.id}')">${sx(t.judul)}</div>`;
+        }).join('')}
+        ${evs.length>3?`<div style="font-size:10px;color:var(--t3)">+${evs.length-3} lagi</div>`:''}
+      </div>`;
+    }
+    // pad end
+    const rem=(7-((startDay+last.getDate())%7))%7;
+    for(let i=1;i<=rem;i++) html+=`<div class="cal-cell other-month"><div class="cal-day-num">${i}</div></div>`;
+    html+='</div>';
+    grid.innerHTML=html;
+
+  } else if(calView==='week') {
+    const ws=new Date(calDate); ws.setDate(ws.getDate()-ws.getDay());
+    const days=[]; for(let i=0;i<7;i++){const d=new Date(ws);d.setDate(ws.getDate()+i);days.push(d);}
+    const today=new Date();today.setHours(0,0,0,0);
+    let html='<div style="display:grid;grid-template-columns:repeat(7,1fr)">'+
+      days.map(d=>{
+        d.setHours(0,0,0,0);
+        const isT=d.getTime()===today.getTime();
+        const evs=getTodosForDate(d);
+        return `<div class="cal-cell${isT?' today':''}" style="min-height:200px">
+          <div class="cal-day-num">${d.toLocaleDateString('id-ID',{weekday:'short',day:'numeric'})}</div>
+          ${evs.map(t=>{const proj=PROJS.find(p=>p.id===t.project_id);const col=proj?proj.color:'#8B0000';
+            return `<div class="cal-ev" style="background:${col}22;color:${col}" onclick="openTodoDet('${t.id}')">${sx(t.judul)}</div>`;
+          }).join('')}
+        </div>`;
+      }).join('')+'</div>';
+    grid.innerHTML=html;
+
+  } else { // day view
+    const evs=getTodosForDate(calDate);
+    const today=new Date();today.setHours(0,0,0,0);calDate.setHours(0,0,0,0);
+    const isT=calDate.getTime()===today.getTime();
+    grid.innerHTML=`<div class="cal-cell${isT?' today':''}" style="min-height:400px;padding:16px">
+      <div style="font-size:15px;font-weight:700;margin-bottom:14px;color:var(--t)">${calDate.toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+      ${evs.length?evs.map(t=>{
+        const proj=PROJS.find(p=>p.id===t.project_id);const col=proj?proj.color:'#8B0000';
+        const dl=t.deadline?new Date(t.deadline).toLocaleTimeString('id-ID',{hour:'2-digit',minute:'2-digit'}):'';
+        return `<div class="kcard" style="margin-bottom:9px" onclick="openTodoDet('${t.id}')">
+          <div class="kt"><span>${sx(t.judul)}</span></div>
+          <div class="km"><span${proj?` class="proj-chip" style="background:${col}22;color:${col};border-color:${col}44"`:''}>📁 ${proj?sx(proj.nama):'-'}</span>
+          ${dl?`<span style="font-size:11px;color:var(--t3)">⏰ ${dl}</span>`:''}</div>
+        </div>`;
+      }).join(''):'<div class="emp"><span class="e">🎉</span><p>Tidak ada tugas hari ini</p></div>'}
+    </div>`;
+  }
+}
+
+// ─── DIREKSI DASHBOARD ───────────────────
+async function rDirDash() {
+  const allU=Object.values(U), allPJ=PJ, allAbs=ABS;
+  const stat=$('dir-stat');
+  if(stat){
+    const totU=allU.filter(u=>u.status==='active').length;
+    const totPJ=allPJ.length, pendPJ=allPJ.filter(p=>p.status==='pending'||p.status==='approved_spv'||p.status==='approved_mgr').length;
+    const totProj=PROJS.length;
+    stat.innerHTML=`
+      <div class="sc"><div class="sl">Total Karyawan</div><div class="sv">${totU}</div><div class="ss2">akun aktif</div><div class="sic">👥</div></div>
+      <div class="sc"><div class="sl">Total Pengajuan</div><div class="sv">${totPJ}</div><div class="ss2">bulan ini</div><div class="sic">💸</div></div>
+      <div class="sc"><div class="sl">Menunggu Proses</div><div class="sv" style="color:var(--wa)">${pendPJ}</div><div class="ss2">perlu tindak lanjut</div><div class="sic">⏳</div></div>
+      <div class="sc"><div class="sl">Total Project</div><div class="sv">${totProj}</div><div class="ss2">project aktif</div><div class="sic">📁</div></div>`;
+  }
+
+  // Karyawan per divisi
+  const empDiv=$('dir-emp-div');
+  if(empDiv){
+    const divs={};
+    allU.filter(u=>u.status==='active').forEach(u=>{divs[u.div]=(divs[u.div]||0)+1;});
+    const total=Object.values(divs).reduce((a,b)=>a+b,0)||1;
+    empDiv.innerHTML=Object.entries(divs).map(([div,cnt])=>`
+      <div style="margin-bottom:10px">
+        <div style="display:flex;justify-content:space-between;font-size:13px;margin-bottom:3px">
+          <span>${DM[div]||div}</span><span style="font-weight:600">${cnt} orang</span>
+        </div>
+        <div class="dir-bar"><div class="dir-bar-fill" style="width:${Math.round(cnt/total*100)}%"></div></div>
+      </div>`).join('')||'<div class="emp"><span class="e">👥</span><p>Belum ada data</p></div>';
+  }
+
+  // Chart pengajuan
+  const pjChart=$('dir-pj-chart');
+  if(pjChart){
+    const sMap={pending:'⏳ Menunggu',approved_spv:'🔍 SPV',approved_mgr:'🎯 Manager',approved:'✅ Final',paid:'💳 Dibayar',rejected:'❌ Ditolak'};
+    const sCnt={};
+    allPJ.forEach(p=>{sCnt[p.status]=(sCnt[p.status]||0)+1;});
+    pjChart.innerHTML=Object.entries(sMap).map(([st,lbl])=>{
+      const cnt=sCnt[st]||0, pct=allPJ.length?Math.round(cnt/allPJ.length*100):0;
+      return `<div style="margin-bottom:9px">
+        <div style="display:flex;justify-content:space-between;font-size:12px;margin-bottom:3px">
+          <span>${lbl}</span><span style="font-weight:600">${cnt}</span>
+        </div>
+        <div class="dir-bar"><div class="dir-bar-fill" style="width:${pct}%;background:${st==='rejected'?'var(--er)':st==='paid'?'var(--in)':st==='approved'?'var(--ok)':'var(--r2)'}"></div></div>
+      </div>`;
+    }).join('');
+  }
+
+  // Daftar karyawan
+  const empList=$('dir-emp-list');
+  if(empList){
+    empList.innerHTML=allU.filter(u=>u.status==='active').map(u=>`
+      <tr><td><b>${sx(u.nama)}</b></td><td><span class="uc">@${sx(u.uname)}</span></td>
+      <td>${DM[u.div]||u.div}</td>
+      <td>${EM[u.role]||''} <span class="bdg bne">${RL[u.role]||u.role}</span></td>
+      <td style="font-size:12px;color:var(--t3)">${u.tgl||'-'}</td></tr>`
+    ).join('')||'<tr><td colspan="5" style="text-align:center;color:var(--t3)">Belum ada karyawan</td></tr>';
+  }
+
+  rDirPJ(); rDirProject();
+}
+
+async function rDirAbs() {
+  const tgl=$('dir-abs-tgl')?$('dir-abs-tgl').value:'';
+  const q=$('dir-abs-q')?$('dir-abs-q').value.toLowerCase():'';
+  const tb=$('dir-abs-tbody'); if(!tb)return;
+  showLoading('Memuat absensi...');
+  const all=await sbGet('absensi','order=tgl.desc&limit=1000');
+  hideLoading();
+  let data=all;
+  if(tgl){const fmt=new Date(tgl).toLocaleDateString('id-ID');data=data.filter(a=>a.tgl===fmt);}
+  if(q)data=data.filter(a=>(a.nama||'').toLowerCase().includes(q)||(a.uname||'').toLowerCase().includes(q));
+  tb.innerHTML=data.map(a=>`<tr>
+    <td><b>${sx(a.nama||'-')}</b></td><td><span class="uc">@${sx(a.uname||'-')}</span></td>
+    <td>${a.tgl}</td><td>${a.jam_in||'-'}</td><td>${a.jam_out||'-'}</td>
+    <td>${tbdg(a.tipe)}</td><td style="font-size:12px">${a.lokasi||'-'}</td>
+    <td><span class="bdg bok">${a.status||'Hadir'}</span></td>
+  </tr>`).join('')||'<tr><td colspan="8" style="text-align:center;color:var(--t3);padding:20px">Tidak ada data 📭</td></tr>';
+}
+
+function rDirPJ() {
+  const fv=$('dir-pj-filter')?$('dir-pj-filter').value:'';
+  const tb=$('dir-pj-tbody'); if(!tb)return;
+  const data=fv?PJ.filter(p=>p.status===fv):PJ;
+
+  // Stats
+  const stat=$('dir-pj-stat');
+  if(stat){
+    const tot=PJ.reduce((s,p)=>s+p.total,0);
+    const paid=PJ.filter(p=>p.status==='paid').reduce((s,p)=>s+p.total,0);
+    stat.innerHTML=`
+      <div class="sc"><div class="sl">Total Nilai</div><div class="sv" style="font-size:16px">${rp(tot)}</div><div class="ss2">semua pengajuan</div><div class="sic">💰</div></div>
+      <div class="sc"><div class="sl">Sudah Dibayar</div><div class="sv" style="font-size:16px;color:var(--ok)">${rp(paid)}</div><div class="ss2">terkonfirmasi</div><div class="sic">✅</div></div>
+      <div class="sc"><div class="sl">Pending</div><div class="sv" style="color:var(--wa)">${PJ.filter(p=>['pending','approved_spv','approved_mgr'].includes(p.status)).length}</div><div class="ss2">menunggu proses</div><div class="sic">⏳</div></div>`;
+  }
+
+  tb.innerHTML=data.map(p=>`<tr>
+    <td><b>${p.id}</b></td>
+    <td>${sx(p.nama)}<br><span class="uc" style="font-size:10px">@${sx(p.uname)}</span></td>
+    <td>${p.desk}</td><td><b>${rp(p.total)}</b></td>
+    <td>${p.klas==='urgent'?'<span class="bdg ber">🔴</span>':p.klas==='important'?'<span class="bdg bgo">⭐</span>':'<span class="bdg bne">📌</span>'}</td>
+    <td>${sbdg(p.status)}</td><td style="font-size:12px;color:var(--t3)">${p.tgl}</td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:20px">Tidak ada data 📭</td></tr>';
+}
+
+function rDirProject() {
+  const el=$('dir-project-list'); if(!el)return;
+  if(!PROJS.length){el.innerHTML='<div class="emp"><span class="e">📁</span><p>Belum ada project</p></div>';return;}
+  el.innerHTML=PROJS.map(p=>{
+    const todos=TODOS.filter(t=>t.project_id===p.id);
+    const done=todos.filter(t=>t.status==='done').length;
+    const pct=todos.length?Math.round(done/todos.length*100):0;
+    return `<div style="background:var(--s);border:1px solid var(--b);border-radius:var(--rl2);padding:14px 17px;margin-bottom:9px;border-left:4px solid ${p.color}">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:5px">
+        <div>
+          <span style="font-weight:700;font-size:14px;color:${p.color}">📁 ${sx(p.nama)}</span>
+          <span class="uc" style="font-size:10px;margin-left:7px">@${sx(p.owner)}</span>
+        </div>
+        <span style="font-size:12px;color:var(--t3)">${todos.length} tugas · ${done} selesai</span>
+      </div>
+      ${p.desk?`<div style="font-size:12px;color:var(--t2);margin-bottom:8px">${sx(p.desk)}</div>`:''}
+      <div class="dir-bar"><div class="dir-bar-fill" style="width:${pct}%;background:${p.color}"></div></div>
+      <div style="font-size:11px;color:var(--t3);margin-top:4px">${pct}% selesai${p.deadline?` · Deadline: ${new Date(p.deadline).toLocaleDateString('id-ID')}`:''}</div>
+    </div>`;
+  }).join('');
+}
+
+async function kirimUmuman() {
+  const jd=$('umu-jd').value.trim(), isi=$('umu-isi').value.trim();
+  const to=$('umu-to').value, pr=$('umu-pr').value;
+  if(!jd||!isi){toast('Isi judul dan isi pengumuman 📝','wa');return;}
+  const data={id:'UMU'+Date.now(),target:to,judul:sx(jd),detail:sx(isi),prioritas:pr,tgl:td(),dari:ME.uname};
+  showLoading('Mengirim pengumuman...');
+  await sbInsert('perintah',data);
+  // Notif ke semua target
+  const targets=to==='all'?Object.values(U):Object.values(U).filter(u=>u.div===to);
+  for(const u of targets.filter(u=>u.uname!==ME.uname)){
+    await sbInsert('notifikasi',{id:'N'+Date.now()+Math.random().toString(36).slice(2),target:u.uname,
+      msg:`📢 Pengumuman dari Direksi: ${sx(jd)}`,unread:true,tgl:td()});
+  }
+  hideLoading();
+  CMDS.unshift(data);
+  const ch=$('umu-hist');
+  if(ch)ch.innerHTML='<div style="font-size:11px;font-weight:700;color:var(--t3);text-transform:uppercase;letter-spacing:.5px;margin-bottom:9px">📢 Terkirim</div>'+
+    CMDS.filter(c2=>c2.dari===ME.uname).slice(0,5).map(c2=>`<div style="background:var(--s2);border-radius:var(--rr);padding:10px 14px;margin-bottom:7px;border-left:3px solid ${c2.prioritas==='urgent'?'var(--er)':'var(--r2)'}">
+      <div style="display:flex;justify-content:space-between;margin-bottom:3px"><b>${sx(c2.judul)}</b><span style="font-size:11px;color:var(--t3)">${c2.tgl}</span></div>
+      <div style="font-size:12px;color:var(--t2)">${sx(c2.detail).substring(0,100)}...</div>
+      <div style="font-size:11px;color:var(--t3);margin-top:3px">👥 ${c2.target} · ${c2.prioritas==='urgent'?'🔴 URGENT':'📌 Normal'}</div>
+    </div>`).join('');
+  ['umu-jd','umu-isi'].forEach(id=>{if($(id))$(id).value='';});
+  addNotif('📢 Pengumuman "'+sx(jd)+'" dikirim ke '+to);
+  toast('Pengumuman terkirim! 📢','ok');
+}
 
 // ═══════════════════════════════════════════
 // START
