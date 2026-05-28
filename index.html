@@ -1817,6 +1817,7 @@ function goPage(id) {
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   const pg=$('pg-'+id); if(pg)pg.classList.add('on');
   const tb=$('nt-'+id);  if(tb)tb.classList.add('on');
+  window.scrollTo({top:0,behavior:'smooth'});
   if(id==='absensi')   rAbs();
   if(id==='pengajuan') rPJ();
   if(id==='approval')  rAppr();
@@ -2677,13 +2678,18 @@ document.addEventListener('click',e=>{const p=$('npan'),b=$('ntog');if(p&&b&&!p.
 // INNER TABS
 // ═══════════════════════════════════════════
 function sit(grp,target,btn){
-  const pm={pj:'pj-',ap:'ap-',sd:'sd-'};
+  const pm={pj:'pj-',ap:'ap-',sd:'sd-',td:'td-',dir:'dir-'};
   document.querySelectorAll(`[id^="${pm[grp]||'x-'}"]`).forEach(e=>e.style.display='none');
   const t=$(target);if(t)t.style.display='block';
   if(btn){const par=btn.closest('.it');if(par)par.querySelectorAll('.itb').forEach(t=>t.classList.remove('on'));btn.classList.add('on');}
   // Load data khusus per tab
   if(target==='sd-cu') { rSDcuti(); rCutiSummary(); }
-  if(target==='sd-ab') { /* trigger manual */ }
+  if(target==='td-matrix') rMatrix();
+  if(target==='td-cal') rCal();
+  if(target==='td-kanban') rKanban();
+  if(target==='dir-absen') rDirAbs();
+  if(target==='dir-pj') rDirPJ();
+  if(target==='dir-project') rDirProject();
 }
 
 // ═══════════════════════════════════════════
