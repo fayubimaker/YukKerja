@@ -1825,8 +1825,8 @@ function goPage(id) {
   if(id==='kasir')     rKasir();
   if(id==='cuti')        rCutiList();
   if(id==='rekap_absensi') rRekapAbs();
-  if(id==='todo')        { loadTodos(); setCv('month'); }
-  if(id==='direksi_dash'){ rDirDash(); loadTodos(); }
+  if(id==='todo')        { loadTodosAndRender(); }
+  if(id==='direksi_dash'){ loadDirDash(); }
 }
 
 // ═══════════════════════════════════════════
@@ -2723,9 +2723,12 @@ let TODOS = [], PROJS = [];
 let calView = 'month', calDate = new Date(), editTodoId = null;
 
 async function loadTodos() {
-  TODOS = await sbGet('todos','order=created_at.desc&limit=500');
-  PROJS = await sbGet('projects','order=created_at.desc&limit=200');
-  rKanban(); updProjDropdowns();
+  try {
+    TODOS = await sbGet('todos','order=created_at.desc&limit=500');
+    PROJS = await sbGet('projects','order=created_at.desc&limit=200');
+  } catch(e) { TODOS=[]; PROJS=[]; }
+  updProjDropdowns();
+  rKanban();
 }
 
 function updProjDropdowns() {
@@ -2735,6 +2738,37 @@ function updProjDropdowns() {
   if($('td-proj-filter')) $('td-proj-filter').innerHTML = fopts;
 }
 
+
+// ═══════════════════════════════════════════
+// LOADER WRAPPERS
+// ═══════════════════════════════════════════
+async function loadTodosAndRender() {
+  showLoading('Memuat tugas...');
+  try {
+    TODOS = await sbGet('todos','order=created_at.desc&limit=500');
+    PROJS = await sbGet('projects','order=created_at.desc&limit=200');
+  } catch(e) { TODOS=[]; PROJS=[]; }
+  hideLoading();
+  updProjDropdowns();
+  rKanban();
+  setCv('month');
+}
+
+async function loadDirDash() {
+  showLoading('Memuat laporan direksi...');
+  try {
+    // Pastikan data user sudah ada
+    if (!Object.keys(U).length) {
+      const users = await sbGet('users','select=*&limit=500');
+      U = Object.fromEntries((users||[]).map(u=>[u.id,u]));
+    }
+    // Load todos & projs kalau belum ada
+    if (!TODOS.length) TODOS = await sbGet('todos','order=created_at.desc&limit=500');
+    if (!PROJS.length) PROJS = await sbGet('projects','order=created_at.desc&limit=200');
+  } catch(e) {}
+  hideLoading();
+  rDirDash();
+}
 
 // ═══════════════════════════════════════════
 // EISENHOWER MATRIX
@@ -3047,10 +3081,10 @@ function rCal() {
 
 // ─── DIREKSI DASHBOARD ───────────────────
 async function rDirDash() {
-  const allU=Object.values(U), allPJ=PJ, allAbs=ABS;
+  const allU=Object.values(U).filter(u=>u.status==='active'), allPJ=PJ, allAbs=ABS;
   const stat=$('dir-stat');
   if(stat){
-    const totU=allU.filter(u=>u.status==='active').length;
+    const totU=allU.length;
     const totPJ=allPJ.length, pendPJ=allPJ.filter(p=>p.status==='pending'||p.status==='approved_spv'||p.status==='approved_mgr').length;
     const totProj=PROJS.length;
     stat.innerHTML=`
