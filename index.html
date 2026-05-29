@@ -1817,12 +1817,16 @@ function goPage(id) {
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   const pg=$('pg-'+id); if(pg)pg.classList.add('on');
   const tb=$('nt-'+id);  if(tb)tb.classList.add('on');
-  // Scroll ke atas setelah render selesai
+  // Scroll ke elemen halaman aktif
   setTimeout(()=>{
-    window.scrollTo(0,0);
-    document.body.scrollTop=0;
-    document.documentElement.scrollTop=0;
-  },0);
+    const nav=document.querySelector('.nav');
+    const navH = nav ? nav.getBoundingClientRect().bottom : 90;
+    const el=$('pg-'+id);
+    if(el){
+      const top = el.getBoundingClientRect().top + window.scrollY - navH;
+      window.scrollTo({top: Math.max(0,top), behavior:'instant'});
+    }
+  },10);
   if(id==='absensi')   rAbs();
   if(id==='pengajuan') rPJ();
   if(id==='approval')  rAppr();
