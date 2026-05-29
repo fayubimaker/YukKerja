@@ -1825,8 +1825,8 @@ function goPage(id) {
   if(id==='kasir')     rKasir();
   if(id==='cuti')        rCutiList();
   if(id==='rekap_absensi') rRekapAbs();
-  if(id==='todo')        { loadTodosAndRender(); }
-  if(id==='direksi_dash'){ loadDirDash(); }
+  if(id==='todo')        { rKanban(); updProjDropdowns(); setCv('month'); sbGet('todos','order=created_at.desc&limit=500').then(d=>{TODOS=d||[];rKanban();updProjDropdowns();}).catch(()=>{}); sbGet('projects','order=created_at.desc&limit=200').then(d=>{PROJS=d||[];updProjDropdowns();rKanban();}).catch(()=>{}); }
+  if(id==='direksi_dash'){ rDirDash(); sbGet('todos','order=created_at.desc&limit=500').then(d=>{TODOS=d||[];rDirProject();}).catch(()=>{}); sbGet('projects','order=created_at.desc&limit=200').then(d=>{PROJS=d||[];rDirProject();}).catch(()=>{}); }
 }
 
 // ═══════════════════════════════════════════
@@ -2732,7 +2732,7 @@ async function loadTodos() {
 }
 
 function updProjDropdowns() {
-  const opts = '<option value="">— Tanpa Project —</option>' + PROJS.map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
+  const opts = '<option value="">— Tanpa Project —</option>' + (PROJS||[]).map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
   if($('td-proj')) $('td-proj').innerHTML = opts;
   const fopts = '<option value="">Semua</option>' + PROJS.map(p=>`<option value="${p.id}">${p.nama}</option>`).join('');
   if($('td-proj-filter')) $('td-proj-filter').innerHTML = fopts;
@@ -2755,26 +2755,15 @@ async function loadTodosAndRender() {
 }
 
 async function loadDirDash() {
-  showLoading('Memuat laporan direksi...');
-  try {
-    // Pastikan data user sudah ada
-    if (!Object.keys(U).length) {
-      const users = await sbGet('users','select=*&limit=500');
-      U = Object.fromEntries((users||[]).map(u=>[u.id,u]));
-    }
-    // Load todos & projs kalau belum ada
-    if (!TODOS.length) TODOS = await sbGet('todos','order=created_at.desc&limit=500');
-    if (!PROJS.length) PROJS = await sbGet('projects','order=created_at.desc&limit=200');
-  } catch(e) {}
-  hideLoading();
-  rDirDash();
+  rDirDash(); // render dulu dengan data yang ada
 }
 
 // ═══════════════════════════════════════════
 // EISENHOWER MATRIX
 // ═══════════════════════════════════════════
 function rMatrix() {
-  const myTodos = TODOS.filter(t =>
+  if(!ME) return;
+  const myTodos = (TODOS||[]).filter(t =>
     t.status !== 'done' &&
     (t.owner === ME.uname || (t.members && t.members.includes(ME.uname)))
   );
@@ -2826,8 +2815,9 @@ function rMatrix() {
 }
 
 function rKanban() {
+  if(!ME) return;
   const fProj = $('td-proj-filter') ? $('td-proj-filter').value : '';
-  let todos = TODOS.filter(t => !fProj || t.project_id === fProj);
+  let todos = (TODOS||[]).filter(t => !fProj || t.project_id === fProj);
   // Mine + assigned
   todos = todos.filter(t => t.owner === ME.uname || (t.members && t.members.includes(ME.uname)));
 
@@ -3080,13 +3070,13 @@ function rCal() {
 }
 
 // ─── DIREKSI DASHBOARD ───────────────────
-async function rDirDash() {
-  const allU=Object.values(U).filter(u=>u.status==='active'), allPJ=PJ, allAbs=ABS;
+function rDirDash() {
+  const allU=Object.values(U).filter(u=>u&&u.status==='active'), allPJ=PJ||[], allAbs=ABS||[];
   const stat=$('dir-stat');
   if(stat){
     const totU=allU.length;
     const totPJ=allPJ.length, pendPJ=allPJ.filter(p=>p.status==='pending'||p.status==='approved_spv'||p.status==='approved_mgr').length;
-    const totProj=PROJS.length;
+    const totProj=(PROJS||[]).length;
     stat.innerHTML=`
       <div class="sc"><div class="sl">Total Karyawan</div><div class="sv">${totU}</div><div class="ss2">akun aktif</div><div class="sic">👥</div></div>
       <div class="sc"><div class="sl">Total Pengajuan</div><div class="sv">${totPJ}</div><div class="ss2">bulan ini</div><div class="sic">💸</div></div>
@@ -3098,7 +3088,7 @@ async function rDirDash() {
   const empDiv=$('dir-emp-div');
   if(empDiv){
     const divs={};
-    allU.filter(u=>u.status==='active').forEach(u=>{divs[u.div]=(divs[u.div]||0)+1;});
+    allU.forEach(u=>{divs[u.div]=(divs[u.div]||0)+1;});
     const total=Object.values(divs).reduce((a,b)=>a+b,0)||1;
     empDiv.innerHTML=Object.entries(divs).map(([div,cnt])=>`
       <div style="margin-bottom:10px">
