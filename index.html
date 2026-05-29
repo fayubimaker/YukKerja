@@ -88,7 +88,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min
 .ur{color:rgba(255,255,255,.4);font-size:10px}
 .lb{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 11px;color:rgba(255,255,255,.6);font-family:var(--f);font-size:12px;cursor:pointer;transition:all .2s}
 .lb:hover{background:rgba(220,38,38,.2);color:#FCA5A5}
-.nav{background:var(--s);border-bottom:1px solid var(--b);padding:0 20px;display:flex;gap:2px;overflow-x:auto}
+.nav{background:var(--s);border-bottom:1px solid var(--b);padding:0 20px;display:flex;gap:2px;overflow-x:auto;position:sticky;top:54px;z-index:99}
 .nt{padding:10px 12px;color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .2s}
 .nt:hover{color:var(--r2)}.nt.on{color:var(--r2);border-bottom-color:var(--r2);font-weight:700}
 
@@ -101,8 +101,8 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min
 .nd.u{background:var(--r2)}.nd.r{background:var(--b2)}
 
 /* PAGES */
-.pg{display:none;padding:20px;max-width:1180px;margin:0 auto;width:100%;height:0;overflow:hidden}
-.pg.on{display:block;height:auto;overflow:visible}
+.pg{display:none;padding:20px;max-width:1180px;margin:0 auto;width:100%}
+.pg.on{display:block}
 .ptit{font-family:var(--fd);font-size:20px;font-weight:700;margin-bottom:3px}
 .psub{color:var(--t3);font-size:13px;margin-bottom:16px}
 
@@ -1817,11 +1817,12 @@ function goPage(id) {
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   const pg=$('pg-'+id); if(pg)pg.classList.add('on');
   const tb=$('nt-'+id);  if(tb)tb.classList.add('on');
-  // Scroll ke atas - coba semua cara
-  window.scrollTo(0,0);
-  document.body.scrollTop=0;
-  document.documentElement.scrollTop=0;
-  const app=$('app'); if(app)app.scrollTop=0;
+  // Scroll ke atas setelah render selesai
+  setTimeout(()=>{
+    window.scrollTo(0,0);
+    document.body.scrollTop=0;
+    document.documentElement.scrollTop=0;
+  },0);
   if(id==='absensi')   rAbs();
   if(id==='pengajuan') rPJ();
   if(id==='approval')  rAppr();
