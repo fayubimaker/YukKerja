@@ -1689,10 +1689,9 @@ async function doLogin() {
     );
     hideLoading();
     if (!user) {
-      const allPend = await sbGet('pending', 'select=uname,email&limit=500');
+      const allPend = await sbGet('pending', 'select=uname,id&limit=500');
       const isPend = allPend.find(u =>
-        (u.uname && u.uname.toLowerCase() === lid) ||
-        (u.email && u.email.toLowerCase() === lid)
+        (u.uname && u.uname.toLowerCase() === lid)
       );
       if (isPend) { toast('Akunmu masih menunggu persetujuan ⏳','wa'); return; }
       toast('Username tidak ditemukan 🔍','er'); return;
@@ -2177,11 +2176,11 @@ function rUsers(){
         <div style="font-size:11px;color:var(--t3)">📧 ${sx(u.email)} · 🏢 ${DM[u.div]||u.div} · 📱 ${sx(u.hp)}</div>
       </div>
       <div style="display:flex;gap:5px;align-items:center;flex-wrap:wrap">
-        <select class="fsl" id="rs-${u.email.replace(/[@.]/g,'_')}" style="padding:4px 8px;font-size:12px;width:auto">
+        <select class="fsl" id="rs-${u.id.replace(/[^a-zA-Z0-9]/g,'_')}" style="padding:4px 8px;font-size:12px;width:auto">
           <option value="staff">🙋 Staff</option><option value="supervisor">🔍 Supervisor</option><option value="manager">🎯 Manager</option><option value="kasir">💰 Kasir</option><option value="kasir_finance">💳 Kasir Finance</option><option value="direksi">🏛️ Direksi</option>
         </select>
-        <button class="btn bg sm" onclick="apvU('${u.email}')">✅ Setujui</button>
-        <button class="btn bd sm" onclick="rejU('${u.email}')">❌ Tolak</button>
+        <button class="btn bg sm" onclick="apvU('${u.id}')">✅ Setujui</button>
+        <button class="btn bd sm" onclick="rejU('${u.id}')">❌ Tolak</button>
       </div>
     </div>`).join(''):'<div class="emp" style="padding:16px 0"><span class="e">🎉</span><p>Tidak ada pendaftaran baru</p></div>';
   const tb=$('allt'); if(!tb)return;
@@ -2194,23 +2193,28 @@ function rUsers(){
       ${u.role!=='superManager'?`<button class="btn bd xs" onclick="delU('${u.id}')">🚫</button>`:''}
     </div></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--t3)">Tidak ada</td></tr>';
 }
-async function apvU(email){
-  const idx=PEND.findIndex(u=>u.email===email); if(idx===-1)return;
-  const u=PEND[idx], key='rs-'+email.replace(/[@.]/g,'_');
+async function apvU(uid){
+  const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
+  const u=PEND[idx];
+  // Ambil role yang dipilih dari dropdown
+  const key='rs-'+uid.replace(/[^a-zA-Z0-9]/g,'_');
   const role=($( key)||{}).value||'staff';
   u.role=role; u.status='active';
   showLoading('Menyetujui akun...');
-  await sbInsert('users', u);
-  await sbDelete('pending', {email});
+  // Insert ke tabel users
+  const res = await sbInsert('users', u);
+  if(!res.ok){ hideLoading(); toast('Gagal approve: '+res.error,'er'); return; }
+  // Hapus dari pending pakai id
+  await sbDelete('pending', {id: uid});
   hideLoading();
-  U[email]=u; PEND.splice(idx,1);
+  U[u.id]=u; PEND.splice(idx,1);
   addNotif('✅ @'+sx(u.uname)+' diaktifkan sebagai '+RL[role]);
   toast('Akun @'+sx(u.uname)+' disetujui! 🎉','ok'); rSD();
 }
-async function rejU(email){
-  const idx=PEND.findIndex(u=>u.email===email); if(idx===-1)return;
+async function rejU(uid){
+  const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
   const u=PEND[idx];
-  await sbDelete('pending',{email});
+  await sbDelete('pending',{id:uid});
   PEND.splice(idx,1);
   toast('Pendaftaran '+sx(u.nama)+' ditolak ❌','er'); rSD();
 }
