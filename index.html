@@ -308,6 +308,7 @@ tr:hover td{background:var(--s2)}
           <option value="MKT">Marketing</option>
           <option value="STR">Store</option>
           <option value="PD">Produk & Development</option>
+          <option value="DIR">Direksi</option>
         </select>
       </div>
       <label class="al">🎫 Username Otomatis</label>
@@ -467,7 +468,7 @@ tr:hover td{background:var(--s2)}
           <label class="fl" id="tujuan-label">Tujuan Transfer (Nama Bank - No. Rekening - Nama)</label>
           <input class="fi" id="pjtujuan" placeholder="Contoh: BCA - 1234567890 - Budi Santoso">
         </div>
-        <div class="fg"><label class="fl">Divisi</label><select class="fsl" id="pjdv"><option value='FAT'>FAT</option><option value='MKT'>Marketing</option><option value='STR'>Store</option><option value='PD'>Produk & Development</option></select></div>
+        <div class="fg"><label class="fl">Divisi</label><select class="fsl" id="pjdv"><option value='FAT'>FAT</option><option value='MKT'>Marketing</option><option value='STR'>Store</option><option value='PD'>Produk & Development</option><option value='DIR'>Direksi</option></select></div>
         <div class="fg">
           <label class="fl" style="display:flex;justify-content:space-between"><span>🛒 Item</span><span id="pjtot" style="color:var(--r2);font-weight:700">Total: Rp 0</span></label>
           <div class="ilist" id="ilist"></div>
@@ -572,7 +573,7 @@ tr:hover td{background:var(--s2)}
     <div id="sd-cm" style="display:none">
       <div class="card"><div class="ch"><span class="ct">📢 Kirim Perintah</span></div><div class="cb">
         <div class="fr">
-          <div class="fg"><label class="fl">Tujuan</label><select class="fsl" id="cmdt"><option value="all">👥 Semua</option><option value="FAT">💼 FAT</option><option value="MKT">📣 Marketing</option><option value="STR">🏪 Store</option><option value="PD">🛠️ Produk & Development</option></select></div>
+          <div class="fg"><label class="fl">Tujuan</label><select class="fsl" id="cmdt"><option value="all">👥 Semua</option><option value="FAT">💼 FAT</option><option value="MKT">📣 Marketing</option><option value="STR">🏪 Store</option><option value="PD">🛠️ Produk & Development</option><option value="DIR">🏛️ Direksi</option></select></div>
           <div class="fg"><label class="fl">Prioritas</label><select class="fsl" id="cmdp"><option value="normal">📌 Normal</option><option value="urgent">🔴 Urgent</option></select></div>
         </div>
         <div class="fg"><label class="fl">Judul</label><input class="fi" id="cmdjd" placeholder="Judul perintah..."></div>
@@ -841,6 +842,7 @@ tr:hover td{background:var(--s2)}
                 <option value="all">👥 Semua Karyawan</option>
                 <option value="FAT">💼 FAT</option><option value="MKT">📣 Marketing</option>
                 <option value="STR">🏪 Store</option><option value="PD">🛠️ Produk & Development</option>
+                <option value="DIR">🏛️ Direksi</option>
               </select>
             </div>
             <div class="fg"><label class="fl">Prioritas</label>
@@ -1273,7 +1275,7 @@ const SS = (k,v) => { try { localStorage.setItem(K+k, JSON.stringify(v)); } catc
 let U={}, PEND=[], PJ=[], CUTI=[], ABS=[], NOTIF=[], CMDS=[], KASH=[], KACC={};
 let ME=null, tolakId=null, bayarId=null, roleUid=null, iCnt=0, cind=false;
 
-const DM = {FAT:'FAT',MKT:'Marketing',STR:'Store',PD:'Produk & Development'};
+const DM = {FAT:'FAT',MKT:'Marketing',STR:'Store',PD:'Produk & Development',DIR:'Direksi',SM:'Direksi'};
 const EM = {superManager:'👑',direksi:'🏛️',manager:'🎯',supervisor:'🔍',staff:'🙋',kasir:'💰',kasir_finance:'💳'};
 const RL = {superManager:'Super Manager',direksi:'Direksi',manager:'Manager',supervisor:'Supervisor',staff:'Staff',kasir:'Kasir',kasir_finance:'Kasir Finance'};
 
