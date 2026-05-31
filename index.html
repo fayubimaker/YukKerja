@@ -22,7 +22,7 @@
   --shm:0 4px 20px rgba(0,0,0,.12);
   --f:'Plus Jakarta Sans',sans-serif;--fd:'Syne',sans-serif;
 }
-body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min-height:100vh;overflow:hidden}
+body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min-height:100vh}
 
 /* TOAST */
 #toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:7px}
@@ -74,7 +74,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min
 .pubox .uv{font-family:var(--fd);font-size:20px;font-weight:800;color:#FF8B94}
 
 /* APP */
-#app{display:none;min-height:100vh;flex-direction:column;height:100vh;overflow-y:auto}
+#app{display:none;min-height:100vh;flex-direction:column}
 .top{background:var(--r);height:54px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0}
 .tlogo{font-family:var(--fd);font-size:19px;font-weight:800;color:#fff}
 .tlogo span{color:#FF8B94}
@@ -1701,12 +1701,26 @@ function showLoading(msg='Memuat...') {
     el = document.createElement('div');
     el.id = 'loading-overlay';
     el.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:9998;display:flex;align-items:center;justify-content:center;flex-direction:column;gap:12px';
-    el.innerHTML = '<div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#FF8B94;border-radius:50%;animation:spin .8s linear infinite"></div><div style="color:#fff;font-size:13px;font-weight:600">'+msg+'</div>';
-    document.head.insertAdjacentHTML('beforeend','<style>@keyframes spin{to{transform:rotate(360deg)}}</style>');
+    el.innerHTML = '<div style="width:40px;height:40px;border:3px solid rgba(255,255,255,.3);border-top-color:#FF8B94;border-radius:50%;animation:spin .8s linear infinite"></div><div id="loading-msg" style="color:#fff;font-size:13px;font-weight:600">'+msg+'</div>';
+    if(!document.getElementById('spin-style')){
+      const s=document.createElement('style');s.id='spin-style';
+      s.textContent='@keyframes spin{to{transform:rotate(360deg)}}';
+      document.head.appendChild(s);
+    }
     document.body.appendChild(el);
-  } else { el.querySelector('div:last-child').textContent = msg; el.style.display = 'flex'; }
+  } else {
+    const msgEl=el.querySelector('#loading-msg')||el.querySelector('div:last-child');
+    if(msgEl)msgEl.textContent=msg;
+    el.style.display='flex';
+  }
+  // Auto-hide setelah 10 detik kalau stuck
+  clearTimeout(el._timeout);
+  el._timeout = setTimeout(()=>hideLoading(), 10000);
 }
-function hideLoading() { const el=document.getElementById('loading-overlay'); if(el)el.style.display='none'; }
+function hideLoading() {
+  const el=document.getElementById('loading-overlay');
+  if(el){ clearTimeout(el._timeout); el.style.display='none'; }
+}
 
 // ═══════════════════════════════════════════
 // UTILS
@@ -2299,9 +2313,10 @@ function goPage(id) {
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   const pg=$('pg-'+id); if(pg)pg.classList.add('on');
   const tb=$('nt-'+id);  if(tb)tb.classList.add('on');
-  // Scroll #app ke atas
-  const appEl = $('app');
-  if(appEl) appEl.scrollTop = 0;
+  // Scroll ke atas
+  try { window.scrollTo(0,0); } catch(e) {}
+  try { document.documentElement.scrollTop = 0; } catch(e) {}
+  try { document.body.scrollTop = 0; } catch(e) {}
   if(id==='absensi')   rAbs();
   if(id==='pengajuan') rPJ();
   if(id==='approval')  rAppr();
