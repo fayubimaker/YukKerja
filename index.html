@@ -369,6 +369,67 @@ tr:hover td{background:var(--s2)}
       <div class="card"><div class="ch"><span class="ct">📋 Pengajuan Terbaru</span></div><div class="cb" id="drec"><div class="emp"><span class="e">📭</span><p>Belum ada</p></div></div></div>
       <div class="card"><div class="ch"><span class="ct">🕐 Absensi Hari Ini</span></div><div class="cb" id="dabs"><div class="emp"><span class="e">👆</span><p>Belum absen</p></div></div></div>
     </div>
+
+    <!-- Corporate Core Values -->
+    <div class="card" style="margin-top:16px;overflow:hidden">
+      <div style="background:linear-gradient(135deg,#8B0000,#C1121F);padding:18px 22px;display:flex;align-items:center;gap:12px">
+        <div style="font-size:32px">💼</div>
+        <div>
+          <div style="font-family:var(--fd);font-size:17px;font-weight:800;color:#fff">Corporate Core Values</div>
+          <div style="color:rgba(255,255,255,.6);font-size:13px;margin-top:2px">Yukbisnis — <b style="color:#FF8B94">S.I.K.A.P</b></div>
+        </div>
+      </div>
+      <div class="cb" style="padding:0">
+        <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(280px,1fr))">
+
+          <!-- S -->
+          <div style="padding:18px 20px;border-bottom:1px solid var(--b);border-right:1px solid var(--b)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:38px;height:38px;border-radius:10px;background:#8B0000;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:20px;font-weight:800;color:#fff;flex-shrink:0">S</div>
+              <div style="font-weight:700;font-size:14px;color:var(--r2)">SPORTIF</div>
+            </div>
+            <div style="font-size:13px;color:var(--t2);line-height:1.75">Tidak ragu untuk mengakui kesalahannya, mengakui kompetensi orang lain yang lebih baik darinya, memiliki sifat terbuka, tidak membicarakan orang lain di belakangnya, berkata dan bersikap lugas sehingga efisien dalam penyelesaian masalah.</div>
+          </div>
+
+          <!-- I -->
+          <div style="padding:18px 20px;border-bottom:1px solid var(--b);border-right:1px solid var(--b)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:38px;height:38px;border-radius:10px;background:#8B0000;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:20px;font-weight:800;color:#fff;flex-shrink:0">I</div>
+              <div style="font-weight:700;font-size:14px;color:var(--r2)">INISIATIF</div>
+            </div>
+            <div style="font-size:13px;color:var(--t2);line-height:1.75">Melakukan sesuatu tanpa perlu diberi aba-aba terlebih dahulu baik dalam kegiatan sehari-hari maupun dalam hal pekerjaan, memiliki sifat empati dan sigap dalam mengambil tindakan, terus mengembangkan diri, proaktif, kaizen, dan produktif.</div>
+          </div>
+
+          <!-- K -->
+          <div style="padding:18px 20px;border-bottom:1px solid var(--b);border-right:1px solid var(--b)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:38px;height:38px;border-radius:10px;background:#8B0000;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:20px;font-weight:800;color:#fff;flex-shrink:0">K</div>
+              <div style="font-weight:700;font-size:14px;color:var(--r2)">KETULUSAN</div>
+            </div>
+            <div style="font-size:13px;color:var(--t2);line-height:1.75">Bersungguh-sungguh dan bersih hati, tidak berpura-pura, memberi/melakukan sesuatu tanpa berharap balas, dan produktif.</div>
+          </div>
+
+          <!-- A -->
+          <div style="padding:18px 20px;border-bottom:1px solid var(--b);border-right:1px solid var(--b)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:38px;height:38px;border-radius:10px;background:#8B0000;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:20px;font-weight:800;color:#fff;flex-shrink:0">A</div>
+              <div style="font-weight:700;font-size:14px;color:var(--r2)">AMANAH</div>
+            </div>
+            <div style="font-size:13px;color:var(--t2);line-height:1.75">Bukan sekadar jujur, tapi juga handal dalam melaksanakan pekerjaan.</div>
+          </div>
+
+          <!-- P -->
+          <div style="padding:18px 20px;border-right:1px solid var(--b)">
+            <div style="display:flex;align-items:center;gap:10px;margin-bottom:10px">
+              <div style="width:38px;height:38px;border-radius:10px;background:#8B0000;display:flex;align-items:center;justify-content:center;font-family:var(--fd);font-size:20px;font-weight:800;color:#fff;flex-shrink:0">P</div>
+              <div style="font-weight:700;font-size:14px;color:var(--r2)">PERSAUDARAAN</div>
+            </div>
+            <div style="font-size:13px;color:var(--t2);line-height:1.75">Ikatan saudara yang bukan karena uang atau profesional.</div>
+          </div>
+
+        </div>
+      </div>
+    </div>
   </div>
 
   <!-- ABSENSI -->
@@ -1809,7 +1870,7 @@ function setupApp() {
 
 const NAVCFG = {
   superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir'],['direksi_dash','🏛️ Lap. Direksi']],
-  direksi:       [['dashboard','🏠 Beranda'],['todo','📋 To Do'],['direksi_dash','🏛️ Dashboard Direksi']],
+  direksi:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['direksi_dash','🏛️ Dashboard Direksi']],
   manager:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
   supervisor:    [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
   staff:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do']],
