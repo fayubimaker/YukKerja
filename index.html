@@ -1624,7 +1624,7 @@ async function doSetup() {
   if (!vpw(pw)) { toast('Password harus min 8 karakter, huruf besar, angka & simbol 🔒','er'); return; }
   if (pw !== pw2) { toast('Password tidak cocok ❌','er'); return; }
   const uname = pan[0].toUpperCase() + pan.slice(1).toLowerCase() + 'SM';
-  const userData = { id:email, nama:sx(nama), panggilan:sx(pan), email, hp, div:'SM', uname, role:'superManager', pw:H(pw), status:'active', tgl:td() };
+  const userData = { id:email, nama:sx(nama), panggilan:sx(pan), pan:sx(pan), email, hp, div:'SM', uname, role:'superManager', pw:H(pw), status:'active', tgl:td() };
 
   showLoading('Membuat akun Super Manager...');
   const res = await sbInsert('users', userData);
@@ -1774,7 +1774,7 @@ async function doRegister(){
     uname=uname+n;
   }
   // Pakai email sebagai ID
-  const data={id:email,nama,panggilan:sx(pan),email,hp:'',div,uname,role:'staff',pw:H(pw),status:'pending',tgl:td()};
+  const data={id:email,nama,panggilan:sx(pan),pan:sx(pan),email,hp:'',div,uname,role:'staff',pw:H(pw),status:'pending',tgl:td()};
   const res=await sbInsert('pending',data);
   hideLoading();
   if(!res.ok){toast('Gagal mendaftar: '+res.error,'er');return;}
@@ -2204,20 +2204,38 @@ function rUsers(){
 async function apvU(uid){
   const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
   const u=PEND[idx];
-  // Ambil role yang dipilih dari dropdown
   const key='rs-'+uid.replace(/[^a-zA-Z0-9]/g,'_');
   const role=($( key)||{}).value||'staff';
-  u.role=role; u.status='active';
+
+  // Buat object bersih untuk insert ke tabel users
+  const newUser = {
+    id: u.id,
+    nama: u.nama,
+    panggilan: u.panggilan||u.pan||u.nama,
+    email: u.email||'',
+    hp: u.hp||'',
+    div: u.div,
+    uname: u.uname,
+    role: role,
+    pw: u.pw,
+    status: 'active',
+    tgl: u.tgl||td()
+  };
+
   showLoading('Menyetujui akun...');
-  // Insert ke tabel users
-  const res = await sbInsert('users', u);
-  if(!res.ok){ hideLoading(); toast('Gagal approve: '+res.error,'er'); return; }
-  // Hapus dari pending pakai id
+  const res = await sbInsert('users', newUser);
+  if(!res.ok){
+    hideLoading();
+    toast('Gagal approve: '+res.error,'er');
+    return;
+  }
   await sbDelete('pending', {id: uid});
   hideLoading();
-  U[u.id]=u; PEND.splice(idx,1);
-  addNotif('✅ @'+sx(u.uname)+' diaktifkan sebagai '+RL[role]);
-  toast('Akun @'+sx(u.uname)+' disetujui! 🎉','ok'); rSD();
+  U[newUser.id] = newUser;
+  PEND.splice(idx,1);
+  addNotif('✅ @'+sx(newUser.uname)+' diaktifkan sebagai '+RL[role]);
+  toast('Akun @'+sx(newUser.uname)+' disetujui! 🎉','ok');
+  rSD();
 }
 async function rejU(uid){
   const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
