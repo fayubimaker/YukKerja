@@ -311,6 +311,8 @@ tr:hover td{background:var(--s2)}
           <option value="DIR">Direksi</option>
         </select>
       </div>
+      <label class="al">📧 Email</label>
+      <input class="ai" id="re" type="email" placeholder="email@perusahaan.com">
       <label class="al">🎫 Username Otomatis</label>
       <div class="uprev" id="re-prev"><span>🎫</span><div><div style="font-size:11px;color:rgba(255,255,255,.4);font-weight:600;letter-spacing:.5px">Username</div><div class="uv" id="re-uv">—</div></div></div>
       <div class="uphint" id="re-hint">✏️ Isi nama panggilan & pilih divisi</div>
@@ -1746,12 +1748,19 @@ function tryParse(s) { try { return JSON.parse(s); } catch { return []; } }
 async function doRegister(){
   const nama=sx($('rn').value.trim()), pan=$('rp').value.trim().replace(/[^a-zA-Z]/g,'');
   const div=$('rdv').value, pw=$('rp1').value, pw2=$('rp2').value;
-  if(!nama||!pan||!div){toast('Lengkapi nama, panggilan & divisi 📝','wa');return;}
+  const email=$('re').value.trim().toLowerCase();
+  if(!nama||!pan||!div||!email){toast('Lengkapi semua data 📝','wa');return;}
+  if(!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)){toast('Format email tidak valid 📧','er');return;}
   if(!vpw(pw)){toast('Password min 8 karakter, huruf besar, angka & simbol 🔒','er');return;}
   if(pw!==pw2){toast('Password tidak cocok ❌','er');return;}
   let uname=pan[0].toUpperCase()+pan.slice(1).toLowerCase()+div;
   showLoading('Mendaftarkan akun...');
-  // Cek uname unik di users dan pending
+  // Cek email unik
+  const existU=await sbGet('users','email=eq.'+encodeURIComponent(email)+'&limit=1');
+  const existP=await sbGet('pending','email=eq.'+encodeURIComponent(email)+'&limit=1');
+  if(existU.length){hideLoading();toast('Email sudah terdaftar 📧','er');return;}
+  if(existP.length){hideLoading();toast('Email sudah dalam antrian ⏳','wa');return;}
+  // Cek uname unik
   const taken1=await sbGet('users','uname=eq.'+encodeURIComponent(uname)+'&limit=1');
   const taken2=await sbGet('pending','uname=eq.'+encodeURIComponent(uname)+'&limit=1');
   if(taken1.length||taken2.length){
@@ -1764,12 +1773,11 @@ async function doRegister(){
     }
     uname=uname+n;
   }
-  // Gunakan uname sebagai ID unik (tidak ada email)
-  const uid = uname + '_' + Date.now();
-  const data={id:uid,nama,panggilan:sx(pan),email:'',hp:'',div,uname,role:'staff',pw:H(pw),status:'pending',tgl:td()};
+  // Pakai email sebagai ID
+  const data={id:email,nama,panggilan:sx(pan),email,hp:'',div,uname,role:'staff',pw:H(pw),status:'pending',tgl:td()};
   const res=await sbInsert('pending',data);
   hideLoading();
-  if(!res.ok){toast('Gagal mendaftar ❌','er');return;}
+  if(!res.ok){toast('Gagal mendaftar: '+res.error,'er');return;}
   toast('Pendaftaran berhasil! Menunggu persetujuan 🎉','ok');
   $('pu-show').textContent='@'+uname; showScr('scr-pending');
 }
