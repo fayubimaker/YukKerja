@@ -22,7 +22,7 @@
   --shm:0 4px 20px rgba(0,0,0,.12);
   --f:'Plus Jakarta Sans',sans-serif;--fd:'Syne',sans-serif;
 }
-body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min-height:100vh;scroll-behavior:auto}
+body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min-height:100vh;overflow:hidden}
 
 /* TOAST */
 #toasts{position:fixed;top:16px;right:16px;z-index:9999;display:flex;flex-direction:column;gap:7px}
@@ -74,8 +74,8 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min
 .pubox .uv{font-family:var(--fd);font-size:20px;font-weight:800;color:#FF8B94}
 
 /* APP */
-#app{display:none;min-height:100vh;flex-direction:column}
-.top{background:var(--r);height:54px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100}
+#app{display:none;min-height:100vh;flex-direction:column;height:100vh;overflow-y:auto}
+.top{background:var(--r);height:54px;padding:0 20px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;flex-shrink:0}
 .tlogo{font-family:var(--fd);font-size:19px;font-weight:800;color:#fff}
 .tlogo span{color:#FF8B94}
 .tr{display:flex;align-items:center;gap:9px}
@@ -88,7 +88,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min
 .ur{color:rgba(255,255,255,.4);font-size:10px}
 .lb{background:rgba(255,255,255,.07);border:1px solid rgba(255,255,255,.12);border-radius:8px;padding:5px 11px;color:rgba(255,255,255,.6);font-family:var(--f);font-size:12px;cursor:pointer;transition:all .2s}
 .lb:hover{background:rgba(220,38,38,.2);color:#FCA5A5}
-.nav{background:var(--s);border-bottom:1px solid var(--b);padding:0 20px;display:flex;gap:2px;overflow-x:auto;position:sticky;top:54px;z-index:99}
+.nav{background:var(--s);border-bottom:1px solid var(--b);padding:0 20px;display:flex;gap:2px;overflow-x:auto;position:sticky;top:0;z-index:99}
 .nt{padding:10px 12px;color:var(--t2);font-size:13px;font-weight:500;cursor:pointer;border-bottom:2.5px solid transparent;white-space:nowrap;transition:all .2s}
 .nt:hover{color:var(--r2)}.nt.on{color:var(--r2);border-bottom-color:var(--r2);font-weight:700}
 
@@ -925,7 +925,7 @@ tr:hover td{background:var(--s2)}
     <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
       <div>
         <div class="ptit" style="margin-bottom:2px">🎯 EOS Dashboard</div>
-        <div class="psub">Entrepreneurial Operating System — Report ke Direksi</div>
+        <div class="psub">Entrepreneurial Operating System — <span id="eos-div-label" style="color:var(--r2);font-weight:700"></span></div>
       </div>
       <button class="btn bp sm" onclick="printEOS()">🖨️ Print / Export PDF</button>
     </div>
@@ -1015,15 +1015,7 @@ tr:hover td{background:var(--s2)}
     <div id="eos-rocks" style="display:none">
       <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
         <div style="font-size:13px;color:var(--t2)">🪨 <b>Rocks</b> = prioritas utama yang harus selesai dalam <b>90 hari</b></div>
-        <div style="display:flex;gap:7px">
-          <select class="fsl" id="rocks-filter" style="width:auto;padding:5px 9px;font-size:12px" onchange="rRocks()">
-            <option value="">Semua Divisi</option>
-            <option value="FAT">FAT</option><option value="MKT">Marketing</option>
-            <option value="STR">Store</option><option value="PD">Produk & Development</option>
-            <option value="DIR">Direksi</option>
-          </select>
-          <button class="btn bp sm" onclick="openM('m-rock')">🪨 Tambah Rock</button>
-        </div>
+        <button class="btn bp sm" onclick="openM('m-rock')">🪨 Tambah Rock</button>
       </div>
       <div class="sg" id="rocks-stat"></div>
       <div class="card">
@@ -1079,6 +1071,145 @@ tr:hover td{background:var(--s2)}
           <table><thead><tr><th>Tanggal</th><th>Fasilitator</th><th>Rating</th><th>Rocks On-Track</th><th>Issues Solved</th><th>To-Do Done</th><th>Detail</th></tr></thead>
           <tbody id="l10-tbody"></tbody>
         </table></div>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- EOS MANAGEMENT ─────────────────────────────── -->
+  <div class="pg" id="pg-eos_mgmt">
+    <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:4px">
+      <div>
+        <div class="ptit" style="margin-bottom:2px">📊 EOS Management</div>
+        <div class="psub">Company-wide EOS — Semua Manager, Super Manager & Direksi</div>
+      </div>
+      <button class="btn bp sm" onclick="window.print()">🖨️ Print / Export PDF</button>
+    </div>
+
+    <div class="it">
+      <div class="itb on" onclick="sit('eosm','eosm-vto',this);rMgmtVTO()">📋 V/TO</div>
+      <div class="itb" onclick="sit('eosm','eosm-rocks',this);rMgmtRocks()">🪨 Rocks</div>
+      <div class="itb" onclick="sit('eosm','eosm-score',this);rMgmtScore()">📊 Scorecard</div>
+      <div class="itb" onclick="sit('eosm','eosm-issues',this);rMgmtIssues()">⚠️ Issues</div>
+      <div class="itb" onclick="sit('eosm','eosm-l10',this);rMgmtL10()">📅 L10 Meeting</div>
+    </div>
+
+    <!-- V/TO Management -->
+    <div id="eosm-vto">
+      <div style="display:grid;grid-template-columns:1fr 1fr;gap:14px">
+        <div class="card">
+          <div class="ch"><span class="ct">🏢 Core Focus</span><button class="btn bs xs" onclick="editMgmtVTO('corefocus')">✏️ Edit</button></div>
+          <div class="cb">
+            <div style="margin-bottom:12px">
+              <div class="fl" style="display:block;margin-bottom:4px">Purpose / Cause / Passion</div>
+              <div id="mvto-purpose" style="font-size:14px;font-weight:600;color:var(--r2);line-height:1.6;min-height:40px"></div>
+            </div>
+            <div>
+              <div class="fl" style="display:block;margin-bottom:4px">Niche</div>
+              <div id="mvto-niche" style="font-size:13px;color:var(--t2);line-height:1.6;min-height:40px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">🎯 10-Year Target</span><button class="btn bs xs" onclick="editMgmtVTO('target')">✏️ Edit</button></div>
+          <div class="cb">
+            <div id="mvto-10yr" style="font-size:22px;font-weight:700;color:var(--r2);line-height:1.5;min-height:60px"></div>
+            <div style="margin-top:12px">
+              <div class="fl" style="display:block;margin-bottom:4px">Painted Picture (3 Tahun)</div>
+              <div id="mvto-3yr" style="font-size:13px;color:var(--t2);line-height:1.6;min-height:40px"></div>
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">💡 Core Values — S.I.K.A.P</span></div>
+          <div class="cb">
+            <div style="display:flex;flex-direction:column;gap:8px">
+              ${['S:Sportif:Terbuka, lugas, tidak membicarakan orang lain','I:Inisiatif:Proaktif, kaizen, produktif tanpa aba-aba','K:Ketulusan:Bersungguh-sungguh, tanpa berharap balas','A:Amanah:Jujur dan handal dalam pekerjaan','P:Persaudaraan:Ikatan bukan karena uang atau profesional'].map(v=>{const[k,n,d]=v.split(':');return `<div style="display:flex;align-items:center;gap:10px;padding:8px 12px;background:var(--rl);border-radius:var(--rr)"><div style="width:28px;height:28px;border-radius:7px;background:#8B0000;display:flex;align-items:center;justify-content:center;font-weight:800;color:#fff;font-size:13px;flex-shrink:0">${k}</div><div><div style="font-weight:700;font-size:13px;color:var(--r2)">${n}</div><div style="font-size:11px;color:var(--t3)">${d}</div></div></div>`;}).join('')}
+            </div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="ch"><span class="ct">📅 1-Year Plan</span><button class="btn bs xs" onclick="editMgmtVTO('1yr')">✏️ Edit</button></div>
+          <div class="cb">
+            <div class="fg" style="margin-bottom:10px">
+              <div class="fl" style="display:block;margin-bottom:4px">Revenue Goal</div>
+              <div id="mvto-revenue" style="font-size:18px;font-weight:700;color:var(--ok);min-height:28px"></div>
+            </div>
+            <div class="fg" style="margin-bottom:10px">
+              <div class="fl" style="display:block;margin-bottom:4px">Profit Goal</div>
+              <div id="mvto-profit" style="font-size:18px;font-weight:700;color:var(--ok);min-height:28px"></div>
+            </div>
+            <div>
+              <div class="fl" style="display:block;margin-bottom:4px">Goals & Measurables</div>
+              <div id="mvto-goals" style="font-size:13px;color:var(--t2);line-height:1.8;min-height:40px"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Rocks Management -->
+    <div id="eosm-rocks" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--t2)">🪨 Company Rocks — prioritas 90 hari seluruh divisi</div>
+        <div style="display:flex;gap:7px;align-items:center">
+          <select class="fsl" id="mrocks-filter" style="width:auto;padding:5px 9px;font-size:12px" onchange="rMgmtRocks()">
+            <option value="">Semua Divisi</option>
+            <option value="FAT">FAT</option><option value="MKT">Marketing</option>
+            <option value="STR">Store</option><option value="PD">Produk & Development</option><option value="DIR">Direksi</option>
+          </select>
+          <button class="btn bp sm" onclick="openMgmtRock()">🪨 Tambah Rock</button>
+        </div>
+      </div>
+      <div class="sg" id="mrocks-stat"></div>
+      <div class="card">
+        <div class="cb tw">
+          <table><thead><tr><th>Rock</th><th>Owner</th><th>Divisi</th><th>Due Date</th><th>Progress</th><th>Status</th><th>Aksi</th></tr></thead>
+          <tbody id="mrocks-tbody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Scorecard Management -->
+    <div id="eosm-score" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--t2)">📊 Company Scorecard — KPI mingguan semua divisi</div>
+        <button class="btn bp sm" onclick="openMgmtKPI()">➕ Tambah KPI</button>
+      </div>
+      <div class="card">
+        <div class="cb tw">
+          <table id="mscore-table"><thead><tr id="mscore-head"></tr></thead><tbody id="mscore-tbody"></tbody></table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Issues Management -->
+    <div id="eosm-issues" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--t2)">⚠️ Company Issues — masalah lintas divisi</div>
+        <button class="btn bp sm" onclick="openMgmtIssue()">⚠️ Tambah Issue</button>
+      </div>
+      <div class="it" style="margin-bottom:12px">
+        <div class="itb on" onclick="filterMgmtIssue('open',this)">🔴 Open</div>
+        <div class="itb" onclick="filterMgmtIssue('solving',this)">🔄 Solving</div>
+        <div class="itb" onclick="filterMgmtIssue('solved',this)">✅ Solved</div>
+        <div class="itb" onclick="filterMgmtIssue('',this)">📋 Semua</div>
+      </div>
+      <div id="missues-list"></div>
+    </div>
+
+    <!-- L10 Management -->
+    <div id="eosm-l10" style="display:none">
+      <div style="display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:10px;margin-bottom:14px">
+        <div style="font-size:13px;color:var(--t2)">📅 Management L10 Meeting — rapat lintas divisi</div>
+        <button class="btn bp sm" onclick="openMgmtL10()">📅 Mulai Meeting</button>
+      </div>
+      <div class="card">
+        <div class="ch"><span class="ct">📋 Riwayat Meeting</span></div>
+        <div class="cb tw">
+          <table><thead><tr><th>Tanggal</th><th>Fasilitator</th><th>Rating</th><th>Rocks On-Track</th><th>Issues Solved</th><th>To-Do Done</th><th>Catatan</th></tr></thead>
+          <tbody id="ml10-tbody"></tbody>
+        </table>
       </div>
     </div>
   </div>
@@ -2150,13 +2281,13 @@ function setupApp() {
 }
 
 const NAVCFG = {
-  superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir'],['direksi_dash','🏛️ Lap. Direksi'],['eos','🎯 EOS']],
-  direksi:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['direksi_dash','🏛️ Dashboard Direksi'],['eos','🎯 EOS Dashboard']],
-  manager:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
-  supervisor:    [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['approval','✅ Persetujuan']],
-  staff:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do']],
-  kasir_finance: [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['kasir','💰 Kasir']],
-  kasir:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['kasir','💰 Kasir']],
+  superManager:  [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['superdash','👑 Super Dashboard'],['kasir','💰 Kasir'],['direksi_dash','🏛️ Lap. Direksi'],['eos','🎯 EOS Divisi'],['eos_mgmt','📊 EOS Management']],
+  direksi:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['direksi_dash','🏛️ Dashboard Direksi'],['eos','🎯 EOS Divisi'],['eos_mgmt','📊 EOS Management']],
+  manager:       [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['eos','🎯 EOS Divisi'],['eos_mgmt','📊 EOS Management'],['approval','✅ Persetujuan']],
+  supervisor:    [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['rekap_absensi','📊 Rekap Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['eos','🎯 EOS Divisi'],['approval','✅ Persetujuan']],
+  staff:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['eos','🎯 EOS Divisi']],
+  kasir_finance: [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['eos','🎯 EOS Divisi'],['kasir','💰 Kasir']],
+  kasir:         [['dashboard','🏠 Beranda'],['absensi','🕐 Absensi'],['cuti','🏖️ Cuti'],['pengajuan','💸 Pengajuan'],['todo','📋 To Do'],['eos','🎯 EOS Divisi'],['kasir','💰 Kasir']],
 };
 function buildNav() {
   const tabs = NAVCFG[ME.role]||NAVCFG.staff;
@@ -2168,16 +2299,9 @@ function goPage(id) {
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   const pg=$('pg-'+id); if(pg)pg.classList.add('on');
   const tb=$('nt-'+id);  if(tb)tb.classList.add('on');
-  // Scroll ke elemen halaman aktif
-  setTimeout(()=>{
-    const nav=document.querySelector('.nav');
-    const navH = nav ? nav.getBoundingClientRect().bottom : 90;
-    const el=$('pg-'+id);
-    if(el){
-      const top = el.getBoundingClientRect().top + window.scrollY - navH;
-      window.scrollTo({top: Math.max(0,top), behavior:'instant'});
-    }
-  },10);
+  // Scroll #app ke atas
+  const appEl = $('app');
+  if(appEl) appEl.scrollTop = 0;
   if(id==='absensi')   rAbs();
   if(id==='pengajuan') rPJ();
   if(id==='approval')  rAppr();
@@ -2185,7 +2309,14 @@ function goPage(id) {
   if(id==='kasir')     rKasir();
   if(id==='cuti')        rCutiList();
   if(id==='rekap_absensi') rRekapAbs();
-  if(id==='eos')         { loadEOS().then(()=>{rVTO();buildOwnerOptions('rock-owner');buildOwnerOptions('kpi-owner');buildOwnerOptions('issue-owner');buildOwnerOptions('l10-fas');}); }
+  if(id==='eos')         {
+    const lbl=$('eos-div-label');
+    if(lbl) lbl.textContent=(DM[ME.div]||ME.div)+' Division'+(isEOSReadOnly()?' 👁️ (Read Only)':'');
+    loadEOS().then(()=>{rVTO();buildOwnerOptions('rock-owner');buildOwnerOptions('kpi-owner');buildOwnerOptions('issue-owner');buildOwnerOptions('l10-fas');});
+  }
+  if(id==='eos_mgmt')    {
+    loadMgmtEOS().then(()=>{rMgmtVTO();rMgmtRocks();});
+  }
   if(id==='todo')        { rKanban(); updProjDropdowns(); setCv('month'); sbGet('todos','order=created_at.desc&limit=500').then(d=>{TODOS=d||[];rKanban();updProjDropdowns();}).catch(()=>{}); sbGet('projects','order=created_at.desc&limit=200').then(d=>{PROJS=d||[];updProjDropdowns();rKanban();}).catch(()=>{}); }
   if(id==='direksi_dash'){ rDirDash(); sbGet('todos','order=created_at.desc&limit=500').then(d=>{TODOS=d||[];rDirProject();}).catch(()=>{}); sbGet('projects','order=created_at.desc&limit=200').then(d=>{PROJS=d||[];rDirProject();}).catch(()=>{}); }
 }
@@ -3062,7 +3193,7 @@ document.addEventListener('click',e=>{const p=$('npan'),b=$('ntog');if(p&&b&&!p.
 // INNER TABS
 // ═══════════════════════════════════════════
 function sit(grp,target,btn){
-  const pm={pj:'pj-',ap:'ap-',sd:'sd-',td:'td-',dir:'dir-',eos:'eos-'};
+  const pm={pj:'pj-',ap:'ap-',sd:'sd-',td:'td-',dir:'dir-',eos:'eos-',eosm:'eosm-'};
   document.querySelectorAll(`[id^="${pm[grp]||'x-'}"]`).forEach(e=>e.style.display='none');
   const t=$(target);if(t)t.style.display='block';
   if(btn){const par=btn.closest('.it');if(par)par.querySelectorAll('.itb').forEach(t=>t.classList.remove('on'));btn.classList.add('on');}
@@ -3128,21 +3259,312 @@ function updProjDropdowns() {
 
 
 
+
+// ═══════════════════════════════════════════
+// EOS MANAGEMENT (Company-wide)
+// ═══════════════════════════════════════════
+let MGMT_EOS = { vto:{}, rocks:[], kpis:[], issues:[], l10s:[] };
+let mgmtVtoSection = '';
+
+async function loadMgmtEOS() {
+  showLoading('Memuat EOS Management...');
+  try {
+    const [rocks, kpis, issues, l10s, vto] = await Promise.all([
+      sbGet('eos_mgmt_rocks','order=created_at.desc'),
+      sbGet('eos_mgmt_kpis','order=created_at.desc'),
+      sbGet('eos_mgmt_issues','order=created_at.desc'),
+      sbGet('eos_mgmt_l10','order=tgl.desc'),
+      sbGet('eos_mgmt_vto','limit=1'),
+    ]);
+    MGMT_EOS.rocks  = rocks||[];
+    MGMT_EOS.kpis   = kpis||[];
+    MGMT_EOS.issues = issues||[];
+    MGMT_EOS.l10s   = l10s||[];
+    MGMT_EOS.vto    = vto&&vto.length ? vto[0] : {};
+  } catch(e) { console.error('Mgmt EOS error:',e); }
+  hideLoading();
+}
+
+// V/TO Management
+function rMgmtVTO() {
+  const v = MGMT_EOS.vto;
+  const set = (id, val) => { const el=$(id); if(el) el.textContent = val || '— Belum diisi —'; };
+  set('mvto-purpose', v.purpose);
+  set('mvto-niche', v.niche);
+  set('mvto-10yr', v.target_10yr);
+  set('mvto-3yr', v.painted_3yr);
+  set('mvto-revenue', v.revenue_goal);
+  set('mvto-profit', v.profit_goal);
+  set('mvto-goals', v.goals);
+}
+
+function editMgmtVTO(section) {
+  mgmtVtoSection = section;
+  const v = MGMT_EOS.vto;
+  const fields = {
+    corefocus:[
+      {id:'mvto-f-purpose',label:'Purpose / Cause / Passion',val:v.purpose||'',type:'textarea'},
+      {id:'mvto-f-niche',label:'Niche',val:v.niche||'',type:'textarea'},
+    ],
+    target:[
+      {id:'mvto-f-10yr',label:'10-Year Target',val:v.target_10yr||'',type:'text'},
+      {id:'mvto-f-3yr',label:'Painted Picture (3 Tahun)',val:v.painted_3yr||'',type:'textarea'},
+    ],
+    '1yr':[
+      {id:'mvto-f-revenue',label:'Revenue Goal',val:v.revenue_goal||'',type:'text'},
+      {id:'mvto-f-profit',label:'Profit Goal',val:v.profit_goal||'',type:'text'},
+      {id:'mvto-f-goals',label:'Goals & Measurables',val:v.goals||'',type:'textarea'},
+    ],
+  };
+  const titles={corefocus:'Core Focus',target:'10-Year & 3-Year Target','1yr':'1-Year Plan'};
+  $('m-vto-title').textContent='✏️ Edit Management '+titles[section];
+  $('m-vto-body').innerHTML=(fields[section]||[]).map(f=>
+    `<div class="fg"><label class="fl">${f.label}</label>${f.type==='textarea'
+      ?`<textarea class="fta" id="${f.id}" style="min-height:80px">${f.val}</textarea>`
+      :`<input class="fi" id="${f.id}" value="${f.val}">`}</div>`
+  ).join('');
+  // Override save button
+  $('m-vto').querySelector('.btn.bp').setAttribute('onclick','saveMgmtVTO()');
+  openM('m-vto');
+}
+
+async function saveMgmtVTO() {
+  const v = MGMT_EOS.vto;
+  const s = mgmtVtoSection;
+  if(s==='corefocus'){v.purpose=$('mvto-f-purpose').value;v.niche=$('mvto-f-niche').value;}
+  else if(s==='target'){v.target_10yr=$('mvto-f-10yr').value;v.painted_3yr=$('mvto-f-3yr').value;}
+  else if(s==='1yr'){v.revenue_goal=$('mvto-f-revenue').value;v.profit_goal=$('mvto-f-profit').value;v.goals=$('mvto-f-goals').value;}
+  showLoading('Menyimpan...');
+  if(v.id){await sbUpdate('eos_mgmt_vto',{id:v.id},v);}
+  else{v.id='MVTO_'+Date.now();await sbInsert('eos_mgmt_vto',v);}
+  MGMT_EOS.vto=v; hideLoading(); closeM('m-vto'); rMgmtVTO();
+  toast('V/TO Management disimpan! 💾','ok');
+}
+
+// Rocks Management
+function rMgmtRocks() {
+  const fDiv=$('mrocks-filter')?$('mrocks-filter').value:'';
+  let rocks=MGMT_EOS.rocks;
+  if(fDiv)rocks=rocks.filter(r=>r.div===fDiv);
+  const stat=$('mrocks-stat');
+  if(stat){
+    const total=rocks.length,onTrack=rocks.filter(r=>r.status==='on_track').length;
+    const offTrack=rocks.filter(r=>r.status==='off_track').length,done=rocks.filter(r=>r.status==='done').length;
+    stat.innerHTML=`
+      <div class="sc"><div class="sl">Total Rocks</div><div class="sv">${total}</div><div class="ss2">company-wide</div><div class="sic">🪨</div></div>
+      <div class="sc"><div class="sl">On Track</div><div class="sv" style="color:var(--ok)">${onTrack}</div><div class="ss2">${total?Math.round(onTrack/total*100):0}%</div><div class="sic">✅</div></div>
+      <div class="sc"><div class="sl">Off Track</div><div class="sv" style="color:var(--er)">${offTrack}</div><div class="ss2">perlu perhatian</div><div class="sic">⚠️</div></div>
+      <div class="sc"><div class="sl">Done</div><div class="sv" style="color:var(--in)">${done}</div><div class="ss2">selesai</div><div class="sic">🏆</div></div>`;
+  }
+  const tb=$('mrocks-tbody');if(!tb)return;
+  const stMap={on_track:'<span class="bdg bok">✅ On Track</span>',off_track:'<span class="bdg ber">⚠️ Off Track</span>',done:'<span class="bdg bin">🏆 Done</span>'};
+  tb.innerHTML=rocks.map(r=>`<tr>
+    <td><b>${sx(r.nama)}</b>${r.note?`<br><span style="font-size:11px;color:var(--t3)">${sx(r.note).substring(0,60)}</span>`:''}</td>
+    <td><span class="uc">@${sx(r.owner)}</span></td>
+    <td><span class="bdg bne">${DM[r.div]||r.div}</span></td>
+    <td style="font-size:12px">${r.due||'-'}</td>
+    <td><div style="display:flex;align-items:center;gap:7px">
+      <div style="flex:1;height:6px;background:var(--b);border-radius:3px;min-width:60px">
+        <div style="width:${r.pct||0}%;height:100%;background:${(r.pct||0)>=80?'var(--ok)':(r.pct||0)>=50?'var(--go)':'var(--r2)'};border-radius:3px"></div>
+      </div>
+      <span style="font-size:11px;font-weight:600">${r.pct||0}%</span>
+    </div></td>
+    <td>${stMap[r.status]||r.status}</td>
+    <td><button class="btn bd xs" onclick="delMgmtRock('${r.id}')">🗑️</button></td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:20px">Belum ada Company Rock 🪨</td></tr>';
+}
+
+function openMgmtRock(){
+  // Reuse modal rock, tapi save ke eos_mgmt_rocks
+  $('rock-nama').value=''; $('rock-note').value='';
+  $('rock-pct').value=0; $('rock-pct-lbl').textContent='0%';
+  buildOwnerOptionsMgmt('rock-owner');
+  // Override submit
+  $('m-rock').querySelector('.btn.bp').setAttribute('onclick','subMgmtRock()');
+  openM('m-rock');
+}
+
+function buildOwnerOptionsMgmt(selId){
+  const el=$(selId);if(!el)return;
+  el.innerHTML=Object.values(U).filter(u=>u.status==='active').map(u=>
+    `<option value="${u.uname}">${sx(u.nama)} (@${sx(u.uname)}) — ${DM[u.div]||u.div}</option>`
+  ).join('');
+}
+
+async function subMgmtRock(){
+  const nama=$('rock-nama').value.trim();
+  if(!nama){toast('Isi nama Rock 📝','wa');return;}
+  const data={id:'MROCK_'+Date.now(),nama:sx(nama),owner:$('rock-owner').value,
+    div:$('rock-div').value,due:$('rock-due').value,status:$('rock-status').value,
+    pct:parseInt($('rock-pct').value)||0,note:sx($('rock-note').value),
+    created_at:new Date().toISOString()};
+  showLoading('Menyimpan...');
+  await sbInsert('eos_mgmt_rocks',data);
+  MGMT_EOS.rocks.unshift(data); hideLoading();
+  closeM('m-rock'); rMgmtRocks();
+  // Restore original onclick
+  $('m-rock').querySelector('.btn.bp').setAttribute('onclick','subRock()');
+  toast('Company Rock ditambahkan! 🪨','ok');
+}
+
+async function delMgmtRock(id){
+  if(!confirm('Hapus Rock ini?'))return;
+  await sbDelete('eos_mgmt_rocks',{id});
+  MGMT_EOS.rocks=MGMT_EOS.rocks.filter(r=>r.id!==id);
+  rMgmtRocks(); toast('Rock dihapus 🗑️','wa');
+}
+
+// Scorecard Management
+function rMgmtScore(){
+  const kpis=MGMT_EOS.kpis;
+  const head=$('mscore-head'),tb=$('mscore-tbody');if(!head||!tb)return;
+  const weeks=[];
+  for(let i=7;i>=0;i--){const d=new Date();d.setDate(d.getDate()-i*7);weeks.push(d.toLocaleDateString('id-ID',{day:'numeric',month:'short'}));}
+  head.innerHTML='<th>KPI</th><th>Owner</th><th>Divisi</th><th>Target</th>'+weeks.map(w=>`<th style="font-size:11px;text-align:center">${w}</th>`).join('')+'<th>Trend</th>';
+  tb.innerHTML=kpis.map(k=>{
+    const vals=k.values?(typeof k.values==='string'?JSON.parse(k.values):k.values):[];
+    const last8=Array(8).fill(null).map((_,i)=>vals[vals.length-8+i]||null);
+    const target=parseFloat(k.target)||0;
+    const trend=last8.filter(Boolean).length>=2?(last8.filter(Boolean).slice(-1)[0]>last8.filter(Boolean).slice(-2)[0]?'📈':'📉'):'—';
+    return `<tr>
+      <td><b>${sx(k.nama)}</b><br><span style="font-size:11px;color:var(--t3)">${k.satuan||''}</span></td>
+      <td><span class="uc" style="font-size:11px">@${sx(k.owner)}</span></td>
+      <td><span class="bdg bne">${DM[k.div]||k.div||'-'}</span></td>
+      <td style="font-weight:600;color:var(--r2)">${k.target} ${k.satuan||''}</td>
+      ${last8.map(v=>v===null?'<td style="text-align:center;color:var(--b2)">—</td>':`<td style="text-align:center;font-weight:600;color:${parseFloat(v)>=target?'var(--ok)':'var(--er)'}">${v}</td>`).join('')}
+      <td style="text-align:center;font-size:18px">${trend}</td>
+    </tr>`;
+  }).join('')||'<tr><td colspan="13" style="text-align:center;color:var(--t3);padding:20px">Belum ada KPI 📊</td></tr>';
+}
+
+function openMgmtKPI(){
+  buildOwnerOptionsMgmt('kpi-owner');
+  $('m-kpi').querySelector('.btn.bp').setAttribute('onclick','subMgmtKPI()');
+  openM('m-kpi');
+}
+
+async function subMgmtKPI(){
+  const nama=$('kpi-nama').value.trim();
+  if(!nama){toast('Isi nama KPI 📝','wa');return;}
+  const valNow=parseFloat($('kpi-val').value)||0;
+  const owner=$('kpi-owner').value;
+  const ownerUser=Object.values(U).find(u=>u.uname===owner);
+  const data={id:'MKPI_'+Date.now(),nama:sx(nama),owner,div:ownerUser?ownerUser.div:'',
+    target:$('kpi-target').value,satuan:$('kpi-satuan').value,
+    values:JSON.stringify([valNow]),created_at:new Date().toISOString()};
+  showLoading('Menyimpan...');
+  await sbInsert('eos_mgmt_kpis',data);
+  MGMT_EOS.kpis.push(data); hideLoading();
+  closeM('m-kpi'); rMgmtScore();
+  $('m-kpi').querySelector('.btn.bp').setAttribute('onclick','subKPI()');
+  toast('Company KPI ditambahkan! 📊','ok');
+}
+
+// Issues Management
+function filterMgmtIssue(status,btn){
+  if(btn){const par=btn.closest('.it');if(par)par.querySelectorAll('.itb').forEach(t=>t.classList.remove('on'));btn.classList.add('on');}
+  rMgmtIssues(status);
+}
+
+function rMgmtIssues(statusFilter='open'){
+  const el=$('missues-list');if(!el)return;
+  let issues=MGMT_EOS.issues;
+  if(statusFilter)issues=issues.filter(i=>i.status===statusFilter);
+  const prioColor={high:'var(--er)',medium:'var(--go)',low:'var(--ok)'};
+  const typeMap={people:'👥',process:'⚙️',data:'📊',vision:'🎯',other:'📌'};
+  const stMap={open:'<span class="bdg ber">🔴 Open</span>',solving:'<span class="bdg bwa">🔄 Solving</span>',solved:'<span class="bdg bok">✅ Solved</span>'};
+  el.innerHTML=issues.map(i=>`
+    <div class="apc" style="border-left:3px solid ${prioColor[i.prio]||'var(--b2)'}">
+      <div class="apm">${typeMap[i.type]||'📌'} <b>${sx(i.desc).substring(0,80)}</b>
+        ${stMap[i.status]||''} <span class="bdg bne">${DM[i.div]||i.div||'-'}</span>
+        <span class="uc" style="font-size:11px">@${sx(i.owner)}</span>
+      </div>
+      ${i.sol?`<div style="background:var(--s2);border-radius:var(--rr);padding:8px 12px;font-size:12px;color:var(--t2);margin-bottom:8px">💡 ${sx(i.sol)}</div>`:''}
+      <div style="display:flex;gap:6px">
+        ${i.status!=='solved'?`<button class="btn bg xs" onclick="solveMgmtIssue('${i.id}')">✅ Solved</button>`:''}
+        ${i.status==='open'?`<button class="btn bs xs" onclick="solvingMgmtIssue('${i.id}')">🔄 Solving</button>`:''}
+        <button class="btn bd xs" onclick="delMgmtIssue('${i.id}')">🗑️</button>
+      </div>
+    </div>`).join('')||`<div class="emp"><span class="e">🎉</span><p>Tidak ada issue ${statusFilter}</p></div>`;
+}
+
+function openMgmtIssue(){
+  buildOwnerOptionsMgmt('issue-owner');
+  $('m-issue').querySelector('.btn.bp').setAttribute('onclick','subMgmtIssue()');
+  openM('m-issue');
+}
+
+async function subMgmtIssue(){
+  const desc=$('issue-desc').value.trim();
+  if(!desc){toast('Isi deskripsi issue ⚠️','wa');return;}
+  const owner=$('issue-owner').value;
+  const ownerUser=Object.values(U).find(u=>u.uname===owner);
+  const data={id:'MISS_'+Date.now(),desc:sx(desc),prio:$('issue-prio').value,type:$('issue-type').value,
+    owner,div:ownerUser?ownerUser.div:'',sol:sx($('issue-sol').value),status:'open',tgl:td()};
+  showLoading('Menyimpan...');
+  await sbInsert('eos_mgmt_issues',data);
+  MGMT_EOS.issues.unshift(data); hideLoading();
+  closeM('m-issue'); rMgmtIssues('open');
+  $('m-issue').querySelector('.btn.bp').setAttribute('onclick','subIssue()');
+  toast('Issue ditambahkan! ⚠️','ok');
+}
+
+async function solveMgmtIssue(id){await sbUpdate('eos_mgmt_issues',{id},{status:'solved'});const i=MGMT_EOS.issues.find(x=>x.id===id);if(i)i.status='solved';rMgmtIssues();toast('Solved! ✅','ok');}
+async function solvingMgmtIssue(id){await sbUpdate('eos_mgmt_issues',{id},{status:'solving'});const i=MGMT_EOS.issues.find(x=>x.id===id);if(i)i.status='solving';rMgmtIssues('open');}
+async function delMgmtIssue(id){if(!confirm('Hapus?'))return;await sbDelete('eos_mgmt_issues',{id});MGMT_EOS.issues=MGMT_EOS.issues.filter(x=>x.id!==id);rMgmtIssues();}
+
+// L10 Management
+function rMgmtL10(){
+  const tb=$('ml10-tbody');if(!tb)return;
+  tb.innerHTML=MGMT_EOS.l10s.map(m=>`<tr>
+    <td>${m.tgl}</td><td><span class="uc">@${sx(m.fas)}</span></td>
+    <td><b style="color:${parseInt(m.rating)>=8?'var(--ok)':parseInt(m.rating)>=6?'var(--go)':'var(--er)'}">${m.rating}/10</b></td>
+    <td>${m.rocks_on||0}</td><td>${m.issues_solved||0}</td>
+    <td><b style="color:${parseInt(m.todo_pct)>=80?'var(--ok)':'var(--er)'}">${m.todo_pct||0}%</b></td>
+    <td style="font-size:12px;color:var(--t2)">${m.note?sx(m.note).substring(0,50)+'...':'-'}</td>
+  </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:20px">Belum ada meeting 📅</td></tr>';
+}
+
+function openMgmtL10(){
+  buildOwnerOptionsMgmt('l10-fas');
+  $('m-l10').querySelector('.btn.bp').setAttribute('onclick','subMgmtL10()');
+  openM('m-l10');
+}
+
+async function subMgmtL10(){
+  const tgl=$('l10-tgl').value;if(!tgl){toast('Isi tanggal 📅','wa');return;}
+  const data={id:'ML10_'+Date.now(),tgl,fas:$('l10-fas').value,rating:$('l10-rating').value,
+    rocks_on:$('l10-rocks').value,issues_solved:$('l10-issues').value,
+    todo_pct:$('l10-todo').value,note:sx($('l10-note').value)};
+  showLoading('Menyimpan...');
+  await sbInsert('eos_mgmt_l10',data);
+  MGMT_EOS.l10s.unshift(data); hideLoading();
+  closeM('m-l10'); rMgmtL10();
+  $('m-l10').querySelector('.btn.bp').setAttribute('onclick','subL10()');
+  toast('Meeting disimpan! 📅','ok');
+}
+
 // ═══════════════════════════════════════════
 // EOS DASHBOARD
 // ═══════════════════════════════════════════
 let EOS_DATA = { vto:{}, rocks:[], kpis:[], issues:[], l10s:[] };
 let eosVtoSection = '';
 
+function isEOSReadOnly() {
+  // Staff, supervisor, kasir hanya bisa lihat - tidak bisa edit
+  return !['manager','superManager','direksi'].includes(ME.role);
+}
+
 async function loadEOS() {
   showLoading('Memuat EOS data...');
+  const div = ME.div; // Filter per divisi manager yang login
   try {
     const [rocks, kpis, issues, l10s, vto] = await Promise.all([
-      sbGet('eos_rocks','order=created_at.desc'),
-      sbGet('eos_kpis','order=created_at.desc'),
-      sbGet('eos_issues','order=created_at.desc'),
-      sbGet('eos_l10','order=tgl.desc'),
-      sbGet('eos_vto','limit=1'),
+      sbGet('eos_rocks','div=eq.'+encodeURIComponent(div)+'&order=created_at.desc'),
+      sbGet('eos_kpis','div=eq.'+encodeURIComponent(div)+'&order=created_at.desc'),
+      sbGet('eos_issues','div=eq.'+encodeURIComponent(div)+'&order=created_at.desc'),
+      sbGet('eos_l10','div=eq.'+encodeURIComponent(div)+'&order=tgl.desc'),
+      sbGet('eos_vto','div=eq.'+encodeURIComponent(div)+'&limit=1'),
     ]);
     EOS_DATA.rocks  = rocks||[];
     EOS_DATA.kpis   = kpis||[];
@@ -3164,6 +3586,11 @@ function rVTO() {
   set('vto-revenue', v.revenue_goal);
   set('vto-profit', v.profit_goal);
   set('vto-goals', v.goals);
+  // Sembunyikan tombol edit jika read only
+  const readOnly = isEOSReadOnly();
+  document.querySelectorAll('[onclick^="editVTO"]').forEach(btn => {
+    btn.style.display = readOnly ? 'none' : '';
+  });
 }
 
 function editVTO(section) {
@@ -3197,6 +3624,7 @@ function editVTO(section) {
 }
 
 async function saveVTO() {
+  if(isEOSReadOnly()){toast('Kamu hanya bisa melihat EOS Divisi 👁️','wa');return;}
   const v = EOS_DATA.vto;
   const section = eosVtoSection;
   if(section==='corefocus'){
@@ -3210,6 +3638,7 @@ async function saveVTO() {
     v.profit_goal  = $('vto-f-profit').value;
     v.goals        = $('vto-f-goals').value;
   }
+  v.div = ME.div; // Tandai VTO milik divisi ini
   showLoading('Menyimpan...');
   if(v.id){
     await sbUpdate('eos_vto',{id:v.id},v);
@@ -3224,9 +3653,13 @@ async function saveVTO() {
 
 // ─── ROCKS ────────────────────────────────
 function rRocks() {
-  const fDiv = $('rocks-filter')?$('rocks-filter').value:'';
-  let rocks = EOS_DATA.rocks;
-  if(fDiv) rocks = rocks.filter(r=>r.div===fDiv);
+  // Toggle tombol tambah sesuai akses
+  const addBtn = document.querySelector('[onclick="openM('m-rock')"]');
+  if(addBtn) addBtn.style.display = isEOSReadOnly() ? 'none' : '';
+  const readOnlyBadge = document.getElementById('rocks-readonly-badge');
+  if(readOnlyBadge) readOnlyBadge.style.display = isEOSReadOnly() ? 'inline-flex' : 'none';
+
+  let rocks = EOS_DATA.rocks; // Sudah difilter by div saat load
 
   // Stats
   const stat=$('rocks-stat');
@@ -3257,21 +3690,26 @@ function rRocks() {
     </td>
     <td>${stMap[r.status]||r.status}</td>
     <td><div style="display:flex;gap:3px">
-      <button class="btn bs xs" onclick="editRock('${r.id}')">✏️</button>
-      <button class="btn bd xs" onclick="delRock('${r.id}')">🗑️</button>
+      ${!isEOSReadOnly()?`<button class="btn bs xs" onclick="editRock('${r.id}')">✏️</button><button class="btn bd xs" onclick="delRock('${r.id}')">🗑️</button>`:'<span style="font-size:11px;color:var(--t3)">—</span>'}
     </div></td>
   </tr>`).join('')||'<tr><td colspan="7" style="text-align:center;color:var(--t3);padding:20px">Belum ada Rock 🪨</td></tr>';
 }
 
 function buildOwnerOptions(selId) {
   const el=$(selId); if(!el)return;
-  el.innerHTML=Object.values(U).filter(u=>u.status==='active').map(u=>`<option value="${u.uname}">${sx(u.nama)} (@${sx(u.uname)})</option>`).join('');
+  // Filter users by divisi yang sama dengan manager yang login
+  const divUsers = Object.values(U).filter(u=>u.status==='active' && u.div===ME.div);
+  const others = Object.values(U).filter(u=>u.status==='active' && u.div!==ME.div);
+  el.innerHTML = divUsers.map(u=>`<option value="${u.uname}">${sx(u.nama)} (@${sx(u.uname)})</option>`).join('')
+    + (divUsers.length && others.length ? '<option disabled>──────────</option>' : '')
+    + others.map(u=>`<option value="${u.uname}">${sx(u.nama)} (@${sx(u.uname)}) — ${DM[u.div]||u.div}</option>`).join('');
 }
 
 async function subRock(){
+  if(isEOSReadOnly()){toast('Kamu hanya bisa melihat EOS Divisi 👁️','wa');return;}
   const nama=$('rock-nama').value.trim();
   if(!nama){toast('Isi nama Rock 📝','wa');return;}
-  const data={id:'ROCK_'+Date.now(),nama:sx(nama),owner:$('rock-owner').value,div:$('rock-div').value,
+  const data={id:'ROCK_'+Date.now(),nama:sx(nama),owner:$('rock-owner').value,div:ME.div,
     due:$('rock-due').value,status:$('rock-status').value,pct:parseInt($('rock-pct').value)||0,
     note:sx($('rock-note').value),created_at:new Date().toISOString()};
   showLoading('Menyimpan Rock...');
@@ -3334,7 +3772,7 @@ async function subKPI(){
   if(!nama){toast('Isi nama KPI 📝','wa');return;}
   const valNow=parseFloat($('kpi-val').value)||0;
   const data={id:'KPI_'+Date.now(),nama:sx(nama),owner:$('kpi-owner').value,
-    target:$('kpi-target').value,satuan:$('kpi-satuan').value,
+    target:$('kpi-target').value,satuan:$('kpi-satuan').value,div:ME.div,
     values:JSON.stringify([valNow]),created_at:new Date().toISOString()};
   showLoading('Menyimpan KPI...');
   await sbInsert('eos_kpis',data);
@@ -3378,7 +3816,7 @@ async function subIssue(){
   const desc=$('issue-desc').value.trim();
   if(!desc){toast('Isi deskripsi issue ⚠️','wa');return;}
   const data={id:'ISS_'+Date.now(),desc:sx(desc),prio:$('issue-prio').value,type:$('issue-type').value,
-    owner:$('issue-owner').value,sol:sx($('issue-sol').value),status:'open',tgl:td()};
+    owner:$('issue-owner').value,sol:sx($('issue-sol').value),status:'open',div:ME.div,tgl:td()};
   showLoading('Menyimpan issue...');
   await sbInsert('eos_issues',data);
   EOS_DATA.issues.unshift(data); hideLoading();
@@ -3422,7 +3860,7 @@ async function subL10(){
   if(!tgl){toast('Isi tanggal meeting 📅','wa');return;}
   const data={id:'L10_'+Date.now(),tgl,fas:$('l10-fas').value,rating:$('l10-rating').value,
     rocks_on:$('l10-rocks').value,issues_solved:$('l10-issues').value,
-    todo_pct:$('l10-todo').value,note:sx($('l10-note').value)};
+    todo_pct:$('l10-todo').value,note:sx($('l10-note').value),div:ME.div};
   showLoading('Menyimpan meeting...');
   await sbInsert('eos_l10',data);
   EOS_DATA.l10s.unshift(data); hideLoading();
