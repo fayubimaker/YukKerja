@@ -2200,7 +2200,7 @@ function lihatDokCuti(id, jenis='pengajuan') {
   if(src.startsWith('data:application/pdf')){
     win.document.write(`<title>${judul}</title><iframe src="${src}" style="width:100%;height:100vh;border:none"></iframe>`);
   } else {
-    win.document.write(`<title>${judul}</title><body style="margin:0;background:#1a1a1a;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${src}" style="max-width:95vw;max-height:95vh;border-radius:8px"></body>`);
+    win.document.write(`<title>${judul}</title><body style="margin:0;background:#1a1a1a;display:flex;align-items:center;justify-content:center;min-height:100vh"><img src="${src}" style="max-width:95vw;max-height:95vh;border-radius:8px"><\/body>`);
   }
 }
 
@@ -3424,8 +3424,8 @@ function genDetailHTML(p) {
   const statusLabel = {pending:'⏳ Menunggu',approved_spv:'🔍 Disetujui SPV',approved_mgr:'🎯 Disetujui Manager',approved:'✅ Final Disetujui',rejected:'❌ Ditolak',paid:'💳 Sudah Dibayar'};
   const items = Array.isArray(p.items)?p.items:(typeof p.items==='string'?JSON.parse(p.items||'[]'):[]);
   return `<!DOCTYPE html><html lang="id"><head><meta charset="UTF-8"><title>Laporan Pengajuan ${p.id}</title>
-<style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;margin:0;padding:0}.wrap{max-width:700px;margin:0 auto;padding:32px}.header{background:#8B0000;color:#fff;padding:20px 24px;border-radius:8px;margin-bottom:24px}.header h1{margin:0;font-size:22px}.section{margin-bottom:20px}.section-title{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px}.grid{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:13px}.grid .lbl{color:#666}.grid .val{font-weight:600}table{width:100%;border-collapse:collapse}th{background:#f5f5f5;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:#666}td{padding:9px 12px;border-bottom:1px solid #eee;font-size:13px}.total-row td{font-weight:700;background:#FFF5F5;color:#8B0000}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center}</style>
-</head><body><div class="wrap">
+<style>body{font-family:Arial,sans-serif;font-size:13px;color:#1a1a1a;margin:0;padding:0}.wrap{max-width:700px;margin:0 auto;padding:32px}.header{background:#8B0000;color:#fff;padding:20px 24px;border-radius:8px;margin-bottom:24px}.header h1{margin:0;font-size:22px}.section{margin-bottom:20px}.section-title{font-size:11px;font-weight:700;color:#666;text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px;border-bottom:1px solid #eee;padding-bottom:4px}.grid{display:grid;grid-template-columns:140px 1fr;gap:6px 12px;font-size:13px}.grid .lbl{color:#666}.grid .val{font-weight:600}table{width:100%;border-collapse:collapse}th{background:#f5f5f5;padding:8px 12px;text-align:left;font-size:11px;font-weight:700;color:#666}td{padding:9px 12px;border-bottom:1px solid #eee;font-size:13px}.total-row td{font-weight:700;background:#FFF5F5;color:#8B0000}.footer{margin-top:32px;padding-top:16px;border-top:1px solid #eee;font-size:11px;color:#999;text-align:center}<\/style>
+<\/head><body><div class="wrap">
 <div class="header"><h1>💼 YukKerja — Laporan Pengajuan Dana</h1><p style="margin:4px 0 0;opacity:.7">Dicetak: ${new Date().toLocaleDateString('id-ID',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</p></div>
 <div class="section"><div class="section-title">Informasi Pengajuan</div>
 <div class="grid"><span class="lbl">ID</span><span class="val">${p.id}</span><span class="lbl">Status</span><span class="val">${statusLabel[p.status]||p.status}</span><span class="lbl">Jenis</span><span class="val">${p.jenis==='reimburse'?'🧾 Reimburse':'💵 Pengajuan Dana'}</span><span class="lbl">Tanggal</span><span class="val">${p.tgl}</span><span class="lbl">Pemohon</span><span class="val">${sx(p.nama)} (@${sx(p.uname)})</span><span class="lbl">Divisi</span><span class="val">${p.div}</span></div></div>
@@ -3435,7 +3435,7 @@ function genDetailHTML(p) {
 <tbody>${items.map((it,i)=>`<tr><td>${i+1}</td><td>${it.n||it.nama}</td><td style="text-align:right">${rpTxt(it.j||it.jumlah||0)}</td></tr>`).join('')}
 <tr class="total-row"><td colspan="2">TOTAL</td><td style="text-align:right">${rpTxt(p.total)}</td></tr></tbody></table></div>
 <div class="footer">Dokumen digenerate oleh YukKerja · ID: ${p.id} · ${new Date().toISOString()}</div>
-</div></body></html>`;
+</div><\/body><\/html>`;
 }
 
 function downloadDetailPDF(id){
