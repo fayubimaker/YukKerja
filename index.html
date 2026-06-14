@@ -101,7 +101,7 @@ body{font-family:var(--f);background:var(--bg);color:var(--t);font-size:14px;min
 .nd.u{background:var(--r2)}.nd.r{background:var(--b2)}
 
 /* PAGES */
-.pg{display:none;padding:20px;max-width:1180px;margin:0 auto;width:100%}
+.pg{display:none;padding:20px;max-width:1180px;margin:0 auto;width:100%;scroll-margin-top:0}
 .pg.on{display:block}
 .ptit{font-family:var(--fd);font-size:20px;font-weight:700;margin-bottom:3px}
 .psub{color:var(--t3);font-size:13px;margin-bottom:16px}
@@ -1678,6 +1678,8 @@ function goPage(id) {
   document.querySelectorAll('.nt').forEach(t=>t.classList.remove('on'));
   const pg=$('pg-'+id); if(pg)pg.classList.add('on');
   const tb=$('nt-'+id);  if(tb)tb.classList.add('on');
+  // Scroll ke halaman aktif
+  if(pg) pg.scrollIntoView({behavior:'instant',block:'start'});
   if(id==='absensi')   rAbs();
   if(id==='pengajuan') rPJ();
   if(id==='approval')  rAppr();
@@ -1689,7 +1691,7 @@ function goPage(id) {
   if(id==='direksi_dash'){ rDirDash(); sbGet('todos','order=created_at.desc&limit=500').then(d=>{TODOS=d||[];rDirProject();}).catch(()=>{}); }
   if(id==='eos')         { const lbl=$('eos-div-label'); if(lbl) lbl.textContent=(DM[ME.div]||ME.div)+' Division'+(isEOSReadOnly()?' 👁️ (Read Only)':''); loadEOS().then(()=>{rVTO();buildOwnerOptions('rock-owner');buildOwnerOptions('kpi-owner');buildOwnerOptions('issue-owner');buildOwnerOptions('l10-fas');}); }
   if(id==='eos_mgmt')    { loadMgmtEOS().then(()=>{rMgmtVTO();}); }
-  setTimeout(()=>{ try{window.scrollTo({top:0,behavior:'instant'});}catch(e){} try{document.documentElement.scrollTop=0;}catch(e){} try{document.body.scrollTop=0;}catch(e){} },50);
+
 }
 
 // ═══════════════════════════════════════════
@@ -2046,23 +2048,27 @@ function rUsers(){
       ${u.role!=='superManager'?`<button class="btn bd xs" onclick="delU('${u.id}')">🚫</button>`:''}
     </div></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--t3)">Tidak ada</td></tr>';
 }
-async function apvU(email){
-  const idx=PEND.findIndex(u=>u.email===email); if(idx===-1)return;
-  const u=PEND[idx], key='rs-'+email.replace(/[@.]/g,'_');
-  const role=($( key)||{}).value||'staff';
-  u.role=role; u.status='active';
-  showLoading('Menyetujui akun...');
-  await sbInsert('users', u);
-  await sbDelete('pending', {email});
-  hideLoading();
-  U[email]=u; PEND.splice(idx,1);
-  addNotif('✅ @'+sx(u.uname)+' diaktifkan sebagai '+RL[role]);
-  toast('Akun @'+sx(u.uname)+' disetujui! 🎉','ok'); rSD();
-}
-async function rejU(email){
-  const idx=PEND.findIndex(u=>u.email===email); if(idx===-1)return;
+async function apvU(uid){
+  const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
   const u=PEND[idx];
-  await sbDelete('pending',{email});
+  const key='rs-'+uid.replace(/[^a-zA-Z0-9]/g,'_');
+  const role=($( key)||{}).value||'staff';
+  const newUser={id:u.id,nama:u.nama,panggilan:u.panggilan||u.pan||u.nama,
+    email:u.email||'',hp:u.hp||'',div:u.div,uname:u.uname,
+    role,pw:u.pw,status:'active',tgl:u.tgl||td()};
+  showLoading('Menyetujui akun...');
+  const res=await sbInsert('users',newUser);
+  if(!res.ok){hideLoading();toast('Gagal approve: '+(res.error||'error'),'er');return;}
+  await sbDelete('pending',{id:uid});
+  hideLoading();
+  U[newUser.id]=newUser; PEND.splice(idx,1);
+  addNotif('✅ @'+sx(newUser.uname)+' diaktifkan sebagai '+RL[role]);
+  toast('Akun @'+sx(newUser.uname)+' disetujui! 🎉','ok'); rSD();
+}
+async function rejU(uid){
+  const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
+  const u=PEND[idx];
+  await sbDelete('pending',{id:uid});
   PEND.splice(idx,1);
   toast('Pendaftaran '+sx(u.nama)+' ditolak ❌','er'); rSD();
 }
@@ -2500,13 +2506,27 @@ document.addEventListener('click',e=>{const p=$('npan'),b=$('ntog');if(p&&b&&!p.
 // INNER TABS
 // ═══════════════════════════════════════════
 function sit(grp,target,btn){
-  const pm={pj:'pj-',ap:'ap-',sd:'sd-'};
+  const pm={pj:'pj-',ap:'ap-',sd:'sd-',td:'td-',dir:'dir-',eos:'eos-',eosm:'eosm-'};
   document.querySelectorAll(`[id^="${pm[grp]||'x-'}"]`).forEach(e=>e.style.display='none');
-  const t=$(target);if(t)t.style.display='block';
+  const t=$(target);if(t){t.style.display='block';setTimeout(()=>t.scrollIntoView({behavior:'instant',block:'nearest'}),0);}
   if(btn){const par=btn.closest('.it');if(par)par.querySelectorAll('.itb').forEach(t=>t.classList.remove('on'));btn.classList.add('on');}
-  // Load data khusus per tab
-  if(target==='sd-cu') { rSDcuti(); rCutiSummary(); }
-  if(target==='sd-ab') { /* trigger manual */ }
+  if(target==='sd-cu'){rSDcuti();rCutiSummary();}
+  if(target==='td-matrix')rMatrix();
+  if(target==='td-cal')rCal();
+  if(target==='td-kanban')rKanban();
+  if(target==='dir-absen')rDirAbs();
+  if(target==='dir-pj')rDirPJ();
+  if(target==='dir-project')rDirProject();
+  if(target==='eosm-rocks')rMgmtRocks();
+  if(target==='eosm-score')rMgmtScore();
+  if(target==='eosm-issues')rMgmtIssues('open');
+  if(target==='eosm-l10')rMgmtL10();
+  if(target==='eosm-vto')rMgmtVTO();
+  if(target==='eos-rocks')rRocks();
+  if(target==='eos-score')rScorecard();
+  if(target==='eos-issues')rIssues('open');
+  if(target==='eos-l10')rL10();
+  if(target==='eos-vto')rVTO();
 }
 
 // ═══════════════════════════════════════════
