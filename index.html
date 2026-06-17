@@ -1155,12 +1155,12 @@ tr:hover td{background:var(--s2)}
     </div>
     <div style="padding:20px 22px">
       <table style="width:100%;border-collapse:collapse;font-size:13px;margin-bottom:18px">
-        <thead><tr><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Klasifikasi</th><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Kapan Digunakan</th><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Tenggat</th><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Target</th></tr></thead>
+        <thead><tr><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Klasifikasi</th><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Kapan Digunakan</th><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Tenggat Pengajuan</th><th style="padding:9px 12px;text-align:left;background:var(--r);color:#fff;font-size:11px">Jadwal Penunaian</th></tr></thead>
         <tbody>
-          <tr><td style="padding:9px 12px;border-bottom:1px solid var(--b)">📌 Normal</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Pengeluaran rutin terencana</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:600;color:var(--r2)">H-1 sebelum 16.00 WIB</td><td style="padding:9px 12px;border-bottom:1px solid var(--b)">Hari berikutnya</td></tr>
-          <tr style="background:var(--gl)"><td style="padding:9px 12px;border-bottom:1px solid var(--b)">⭐ Important</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Prioritas tinggi terencana</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:600;color:var(--r2)">H-1 sebelum 16.00 WIB</td><td style="padding:9px 12px;border-bottom:1px solid var(--b)">Hari yang sama</td></tr>
-          <tr style="background:var(--rl)"><td style="padding:9px 12px;border-bottom:1px solid var(--b)">🔴 Urgent</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Mendadak tidak terencana</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:700;color:var(--er)">Hari ini maks. 14.00 WIB</td><td style="padding:9px 12px;border-bottom:1px solid var(--b)">Diusahakan hari ini</td></tr>
-          <tr><td style="padding:9px 12px">🧾 Reimburse</td><td style="padding:9px 12px;color:var(--t2)">Penggantian biaya karyawan</td><td style="padding:9px 12px;font-weight:600;color:var(--r2)">Maks. 7 hari kerja</td><td style="padding:9px 12px">1 hari berikutnya</td></tr>
+          <tr><td style="padding:9px 12px;border-bottom:1px solid var(--b)">📌 Normal</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Pengeluaran rutin terencana</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:600;color:var(--r2)">H-1 sebelum 16.00 WIB</td><td style="padding:9px 12px;border-bottom:1px solid var(--b)">Hari berikutnya pukul 14.00–14.30</td></tr>
+          <tr style="background:var(--gl)"><td style="padding:9px 12px;border-bottom:1px solid var(--b)">⭐ Important</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Prioritas tinggi terencana</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:600;color:var(--r2)">H-1 sebelum 16.00 WIB</td><td style="padding:9px 12px;border-bottom:1px solid var(--b)">Hari berikutnya pukul 14.00–14.30</td></tr>
+          <tr style="background:var(--rl)"><td style="padding:9px 12px;border-bottom:1px solid var(--b)">🔴 Urgent</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);color:var(--t2)">Mendadak tidak terencana</td><td style="padding:9px 12px;border-bottom:1px solid var(--b);font-weight:700;color:var(--er)">Hari ini maks. 14.00 WIB</td><td style="padding:9px 12px;border-bottom:1px solid var(--b)">Hari yang berkaitan</td></tr>
+          <tr><td style="padding:9px 12px">🧾 Reimburse</td><td style="padding:9px 12px;color:var(--t2)">Penggantian biaya karyawan</td><td style="padding:9px 12px;font-weight:600;color:var(--r2)">Maks. 7 hari kerja</td><td style="padding:9px 12px">Hari berikutnya pukul 14.00–14.30</td></tr>
         </tbody>
       </table>
       <div style="background:var(--s2);border-radius:var(--rr);padding:13px 16px;border:1px solid var(--b);font-size:12px;color:var(--t2);line-height:1.8">
@@ -2049,21 +2049,45 @@ function rUsers(){
     </div></td></tr>`).join('')||'<tr><td colspan="6" style="text-align:center;color:var(--t3)">Tidak ada</td></tr>';
 }
 async function apvU(uid){
-  const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
+  const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1){toast('Data tidak ditemukan','er');return;}
   const u=PEND[idx];
   const key='rs-'+uid.replace(/[^a-zA-Z0-9]/g,'_');
   const role=($( key)||{}).value||'staff';
-  const newUser={id:u.id,nama:u.nama,panggilan:u.panggilan||u.pan||u.nama,
-    email:u.email||'',hp:u.hp||'',div:u.div,uname:u.uname,
-    role,pw:u.pw,status:'active',tgl:u.tgl||td()};
+  // Hanya kirim field yang pasti ada di tabel users
+  const newUser={
+    id: u.id,
+    nama: u.nama||'',
+    panggilan: u.panggilan||u.pan||u.nama||'',
+    email: u.email||'',
+    hp: u.hp||'',
+    div: u.div||'',
+    uname: u.uname||'',
+    role: role,
+    pw: u.pw||'',
+    status: 'active',
+    tgl: u.tgl||td()
+  };
   showLoading('Menyetujui akun...');
-  const res=await sbInsert('users',newUser);
-  if(!res.ok){hideLoading();toast('Gagal approve: '+(res.error||'error'),'er');return;}
+  // Coba insert dulu, kalau gagal karena duplicate coba update
+  let res = await sbInsert('users', newUser);
+  if(!res.ok){
+    // Mungkin sudah ada, coba update
+    if(res.error && res.error.includes('duplicate')){
+      await sbUpdate('users',{id:uid},{role,status:'active'});
+      res={ok:true};
+    } else {
+      hideLoading();
+      toast('Gagal: '+res.error,'er');
+      console.error('apvU error:', res.error, 'data:', newUser);
+      return;
+    }
+  }
   await sbDelete('pending',{id:uid});
   hideLoading();
   U[newUser.id]=newUser; PEND.splice(idx,1);
   addNotif('✅ @'+sx(newUser.uname)+' diaktifkan sebagai '+RL[role]);
-  toast('Akun @'+sx(newUser.uname)+' disetujui! 🎉','ok'); rSD();
+  toast('Akun @'+sx(newUser.uname)+' disetujui! 🎉','ok');
+  rSD();
 }
 async function rejU(uid){
   const idx=PEND.findIndex(u=>u.id===uid); if(idx===-1)return;
